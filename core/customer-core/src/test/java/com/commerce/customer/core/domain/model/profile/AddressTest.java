@@ -31,9 +31,31 @@ class AddressTest {
         assertThat(address.getAlias()).isEqualTo(alias);
         assertThat(address.getZipCode()).isEqualTo(zipCode);
         assertThat(address.getRoadAddress()).isEqualTo(roadAddress);
+        assertThat(address.getJibunAddress()).isNull();
         assertThat(address.getDetailAddress()).isEqualTo(detailAddress);
         assertThat(address.isDefault()).isFalse();
         assertThat(address.getCreatedAt()).isNotNull();
+    }
+
+    @Test
+    @DisplayName("지번 주소가 포함된 주소를 생성할 수 있다")
+    void createAddressWithJibunAddress() {
+        // Given
+        AddressType type = AddressType.HOME;
+        String alias = "집";
+        String zipCode = "12345";
+        String roadAddress = "서울특별시 강남구 테헤란로 123";
+        String jibunAddress = "서울특별시 강남구 역삼동 123-45";
+        String detailAddress = "456호";
+
+        // When
+        Address address = Address.create(type, alias, zipCode, roadAddress, jibunAddress, detailAddress);
+
+        // Then
+        assertThat(address).isNotNull();
+        assertThat(address.getRoadAddress()).isEqualTo(roadAddress);
+        assertThat(address.getJibunAddress()).isEqualTo(jibunAddress);
+        assertThat(address.getDetailAddress()).isEqualTo(detailAddress);
     }
 
     @Test
