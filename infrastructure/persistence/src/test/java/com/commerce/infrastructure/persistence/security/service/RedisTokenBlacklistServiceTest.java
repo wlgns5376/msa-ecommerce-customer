@@ -37,13 +37,14 @@ class RedisTokenBlacklistServiceTest {
 
     @BeforeEach
     void setUp() {
-        given(redisTemplate.opsForValue()).willReturn(valueOperations);
+        // 공통 설정은 제거하고 각 테스트에서 필요한 경우만 설정
     }
 
     @Test
     @DisplayName("토큰을 블랙리스트에 성공적으로 추가한다")
     void addToBlacklist_Success() {
         // Given
+        given(redisTemplate.opsForValue()).willReturn(valueOperations);
         long currentTime = System.currentTimeMillis();
         long expirationTime = currentTime + 3600000L; // 1시간 후
 
@@ -73,6 +74,7 @@ class RedisTokenBlacklistServiceTest {
     @DisplayName("Redis 오류 시에도 예외가 발생하지 않는다")
     void addToBlacklist_RedisException() {
         // Given
+        given(redisTemplate.opsForValue()).willReturn(valueOperations);
         long currentTime = System.currentTimeMillis();
         long expirationTime = currentTime + 3600000L;
         
@@ -177,6 +179,7 @@ class RedisTokenBlacklistServiceTest {
     @DisplayName("TTL 계산이 정확하게 동작한다")
     void addToBlacklist_TTLCalculation() {
         // Given
+        given(redisTemplate.opsForValue()).willReturn(valueOperations);
         long currentTime = System.currentTimeMillis();
         long expirationTime = currentTime + 7200000L; // 2시간 후
 

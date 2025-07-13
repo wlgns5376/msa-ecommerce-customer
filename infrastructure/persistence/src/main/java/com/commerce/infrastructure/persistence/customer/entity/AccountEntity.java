@@ -71,6 +71,6 @@ public class AccountEntity extends BaseEntity {
     }
 
     public enum AccountStatus {
-        PENDING, ACTIVE, SUSPENDED, DEACTIVATED
+        PENDING, ACTIVE, INACTIVE, DORMANT, SUSPENDED, DELETED
     }
 }

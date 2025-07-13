@@ -59,4 +59,9 @@ public class CustomerProfileRepositoryAdapter implements CustomerProfileReposito
         return customerProfileJpaRepository.findByCustomerIdWithAddresses(customerId.getValue())
                 .map(customerProfileMapper::toDomain);
     }
+
+    @Override
+    public void deleteById(ProfileId profileId) {
+        customerProfileJpaRepository.deleteById(profileId.getValue());
+    }
 }

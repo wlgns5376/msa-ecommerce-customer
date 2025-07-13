@@ -48,22 +48,33 @@ class AccountRepositoryAdapterTest {
         customerId = CustomerId.of(1L);
         email = Email.of("test@example.com");
 
-        testAccount = Account.create(
+        // 테스트용 Account 생성 (restore 사용하여 ID 고정)
+        testAccount = Account.restore(
                 accountId,
                 customerId,
                 email,
-                Password.of("hashedPassword123"),
-                AccountStatus.ACTIVE
+                Password.of("ValidPass123!"),
+                AccountStatus.ACTIVE,
+                LocalDateTime.now(),
+                LocalDateTime.now(),
+                null
         );
 
         testAccountEntity = AccountEntity.builder()
-                .accountId(1L)
                 .customerId(1L)
                 .email("test@example.com")
-                .password("hashedPassword123")
+                .password("ValidPass123!")
                 .status(AccountEntity.AccountStatus.ACTIVE)
-                .activatedAt(LocalDateTime.now())
                 .build();
+        
+        // 리플렉션으로 accountId 설정
+        try {
+            java.lang.reflect.Field accountIdField = testAccountEntity.getClass().getDeclaredField("accountId");
+            accountIdField.setAccessible(true);
+            accountIdField.set(testAccountEntity, 1L);
+        } catch (Exception e) {
+            // 테스트 환경에서만 사용되므로 예외 무시
+        }
     }
 
     @Test
@@ -81,6 +92,7 @@ class AccountRepositoryAdapterTest {
         assertThat(result).isNotNull();
         assertThat(result.getAccountId()).isEqualTo(accountId);
         assertThat(result.getEmail()).isEqualTo(email);
+        assertThat(result.getStatus()).isEqualTo(AccountStatus.ACTIVE);
         
         then(accountMapper).should(times(1)).toEntity(testAccount);
         then(accountJpaRepository).should(times(1)).save(testAccountEntity);
@@ -100,6 +112,7 @@ class AccountRepositoryAdapterTest {
         // Then
         assertThat(result).isPresent();
         assertThat(result.get().getAccountId()).isEqualTo(accountId);
+        assertThat(result.get().getStatus()).isEqualTo(AccountStatus.ACTIVE);
         
         then(accountJpaRepository).should(times(1)).findById(1L);
         then(accountMapper).should(times(1)).toDomain(testAccountEntity);

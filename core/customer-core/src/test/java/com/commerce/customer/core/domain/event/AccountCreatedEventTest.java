@@ -93,16 +93,16 @@ class AccountCreatedEventTest {
     @DisplayName("이벤트의 모든 필드가 올바르게 설정된다")
     void allFieldsAreSetCorrectly() {
         // Given
-        AccountId accountId = AccountId.of("ACC123");
-        CustomerId customerId = CustomerId.of("CUST456");
+        AccountId accountId = AccountId.of(123L);
+        CustomerId customerId = CustomerId.of(456L);
         Email email = Email.of("user@domain.com");
 
         // When
         AccountCreatedEvent event = new AccountCreatedEvent(accountId, customerId, email);
 
         // Then
-        assertThat(event.getAccountId().getValue()).isEqualTo("ACC123");
-        assertThat(event.getCustomerId().getValue()).isEqualTo("CUST456");
+        assertThat(event.getAccountId().getValue()).isEqualTo(123L);
+        assertThat(event.getCustomerId().getValue()).isEqualTo(456L);
         assertThat(event.getEmail().getValue()).isEqualTo("user@domain.com");
         assertThat(event.getOccurredAt()).isNotNull();
     }

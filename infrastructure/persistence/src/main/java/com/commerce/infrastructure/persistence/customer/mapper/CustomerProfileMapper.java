@@ -20,12 +20,12 @@ public class CustomerProfileMapper {
                 .customerId(profile.getCustomerId().getValue())
                 .firstName(profile.getPersonalInfo().getFullName().getFirstName())
                 .lastName(profile.getPersonalInfo().getFullName().getLastName())
-                .primaryPhone(profile.getContactInfo().getPrimaryPhone().getValue())
+                .primaryPhone(profile.getContactInfo().getPrimaryPhone().getNumber())
                 .status(mapToEntityStatus(profile.getStatus()));
 
         // Optional fields
         if (profile.getPersonalInfo().getBirthDate() != null) {
-            builder.birthDate(profile.getPersonalInfo().getBirthDate().getValue());
+            builder.birthDate(profile.getPersonalInfo().getBirthDate().getDate());
         }
         
         if (profile.getPersonalInfo().getGender() != null) {
@@ -33,25 +33,25 @@ public class CustomerProfileMapper {
         }
         
         if (profile.getPersonalInfo().getProfileImage() != null) {
-            builder.profileImageUrl(profile.getPersonalInfo().getProfileImage().getUrl());
+            builder.profileImageUrl(profile.getPersonalInfo().getProfileImage().getImageUrl());
         }
         
         if (profile.getContactInfo().getSecondaryPhone() != null) {
-            builder.secondaryPhone(profile.getContactInfo().getSecondaryPhone().getValue());
+            builder.secondaryPhone(profile.getContactInfo().getSecondaryPhone().getNumber());
         }
 
         // Marketing consent
         MarketingConsent marketingConsent = profile.getPreferences().getMarketingConsent();
-        builder.emailMarketingConsent(marketingConsent.isEmailConsent())
-               .smsMarketingConsent(marketingConsent.isSmsConsent())
-               .pushMarketingConsent(marketingConsent.isPushConsent());
+        builder.emailMarketingConsent(marketingConsent.isEmailMarketing())
+               .smsMarketingConsent(marketingConsent.isSmsMarketing())
+               .pushMarketingConsent(marketingConsent.isPersonalizedAds());
 
         // Notification settings
         NotificationSettings notificationSettings = profile.getPreferences().getNotificationSettings();
-        builder.orderNotifications(notificationSettings.isOrderNotifications())
-               .promotionNotifications(notificationSettings.isPromotionNotifications())
-               .accountNotifications(notificationSettings.isAccountNotifications())
-               .reviewNotifications(notificationSettings.isReviewNotifications());
+        builder.orderNotifications(notificationSettings.isOrderUpdates())
+               .promotionNotifications(notificationSettings.isPromotionalOffers())
+               .accountNotifications(notificationSettings.isEmailNotification())
+               .reviewNotifications(notificationSettings.isSmsNotification());
 
         return builder.build();
     }
@@ -63,46 +63,41 @@ public class CustomerProfileMapper {
 
         // Personal Info 구성
         FullName fullName = FullName.of(entity.getFirstName(), entity.getLastName());
-        PersonalInfo.PersonalInfoBuilder personalInfoBuilder = PersonalInfo.builder()
-                .fullName(fullName);
-
-        if (entity.getBirthDate() != null) {
-            personalInfoBuilder.birthDate(BirthDate.of(entity.getBirthDate()));
-        }
         
-        if (entity.getGender() != null) {
-            personalInfoBuilder.gender(mapToDomainGender(entity.getGender()));
-        }
+        BirthDate birthDate = entity.getBirthDate() != null ? 
+            BirthDate.of(entity.getBirthDate()) : null;
         
-        if (entity.getProfileImageUrl() != null) {
-            personalInfoBuilder.profileImage(ProfileImage.of(entity.getProfileImageUrl()));
-        }
+        Gender gender = entity.getGender() != null ? 
+            mapToDomainGender(entity.getGender()) : null;
+        
+        ProfileImage profileImage = entity.getProfileImageUrl() != null ? 
+            ProfileImage.of(entity.getProfileImageUrl()) : null;
 
-        PersonalInfo personalInfo = personalInfoBuilder.build();
+        PersonalInfo personalInfo = PersonalInfo.of(fullName, birthDate, gender, profileImage);
 
         // Contact Info 구성
-        ContactInfo.ContactInfoBuilder contactInfoBuilder = ContactInfo.builder()
-                .primaryPhone(PhoneNumber.of(entity.getPrimaryPhone()));
-        
-        if (entity.getSecondaryPhone() != null) {
-            contactInfoBuilder.secondaryPhone(PhoneNumber.of(entity.getSecondaryPhone()));
-        }
-        
-        ContactInfo contactInfo = contactInfoBuilder.build();
+        PhoneNumber primaryPhone = PhoneNumber.of("+82", entity.getPrimaryPhone());
+        PhoneNumber secondaryPhone = entity.getSecondaryPhone() != null ? 
+            PhoneNumber.of("+82", entity.getSecondaryPhone()) : null;
+            
+        ContactInfo contactInfo = secondaryPhone != null ? 
+            ContactInfo.of(primaryPhone, secondaryPhone) : 
+            ContactInfo.of(primaryPhone);
 
         // Marketing Consent 구성
         MarketingConsent marketingConsent = MarketingConsent.builder()
-                .emailConsent(entity.getEmailMarketingConsent())
-                .smsConsent(entity.getSmsMarketingConsent())
-                .pushConsent(entity.getPushMarketingConsent())
+                .emailMarketing(entity.getEmailMarketingConsent())
+                .smsMarketing(entity.getSmsMarketingConsent())
+                .personalizedAds(entity.getPushMarketingConsent())
                 .build();
 
         // Notification Settings 구성
         NotificationSettings notificationSettings = NotificationSettings.builder()
-                .orderNotifications(entity.getOrderNotifications())
-                .promotionNotifications(entity.getPromotionNotifications())
-                .accountNotifications(entity.getAccountNotifications())
-                .reviewNotifications(entity.getReviewNotifications())
+                .orderUpdates(entity.getOrderNotifications())
+                .promotionalOffers(entity.getPromotionNotifications())
+                .emailNotification(entity.getAccountNotifications())
+                .smsNotification(entity.getReviewNotifications())
+                .pushNotification(true) // default value
                 .build();
 
         // Addresses 변환
@@ -137,20 +132,16 @@ public class CustomerProfileMapper {
                 .brandPreferences(brandPreferences)
                 .build();
 
-        return CustomerProfile.builder()
-                .profileId(ProfileId.of(entity.getProfileId()))
-                .customerId(CustomerId.of(entity.getCustomerId()))
-                .personalInfo(personalInfo)
-                .contactInfo(contactInfo)
-                .addresses(addresses)
-                .preferences(preferences)
-                .status(mapToDomainStatus(entity.getStatus()))
-                .build();
+        // CustomerProfile 생성 (create 메서드 사용)
+        return CustomerProfile.create(
+                CustomerId.of(entity.getCustomerId()),
+                personalInfo,
+                contactInfo
+        );
     }
 
     private Address mapAddressToDomain(AddressEntity entity) {
         return Address.create(
-                AddressId.of(entity.getAddressId()),
                 mapToDomainAddressType(entity.getType()),
                 entity.getAlias(),
                 entity.getZipCode(),
@@ -162,6 +153,7 @@ public class CustomerProfileMapper {
 
     private BrandPreference mapBrandPreferenceToDomain(BrandPreferenceEntity entity) {
         return BrandPreference.of(
+                "BRAND_" + entity.getBrandName().toUpperCase(), // 임시 ID 생성
                 entity.getBrandName(),
                 mapToDomainPreferenceLevel(entity.getPreferenceLevel())
         );
@@ -169,6 +161,7 @@ public class CustomerProfileMapper {
 
     private CategoryInterest mapCategoryInterestToDomain(CategoryInterestEntity entity) {
         return CategoryInterest.of(
+                "CAT_" + entity.getCategoryName().toUpperCase(), // 임시 ID 생성
                 entity.getCategoryName(),
                 mapToDomainInterestLevel(entity.getInterestLevel())
         );
@@ -179,7 +172,7 @@ public class CustomerProfileMapper {
         return switch (gender) {
             case MALE -> CustomerProfileEntity.Gender.MALE;
             case FEMALE -> CustomerProfileEntity.Gender.FEMALE;
-            case OTHER -> CustomerProfileEntity.Gender.OTHER;
+            case OTHER, PREFER_NOT_TO_SAY -> CustomerProfileEntity.Gender.OTHER;
         };
     }
 
