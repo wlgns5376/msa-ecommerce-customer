@@ -1,0 +1,181 @@
+name: 🧪 PR Test & Coverage
+
+on:
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'core/**'
+      - 'common/**'
+      - 'build.gradle'
+      - 'settings.gradle'
+      - '.github/workflows/**'
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'core/**'
+      - 'common/**'
+      - 'build.gradle'
+      - 'settings.gradle'
+      - '.github/workflows/**'
+
+env:
+  GRADLE_OPTS: -Dorg.gradle.daemon=false -Dorg.gradle.workers.max=2
+  JAVA_VERSION: '17'
+
+jobs:
+  test:
+    name: 🏗️ Build & Test
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: ☕ Set up JDK ${{ env.JAVA_VERSION }}
+      uses: actions/setup-java@v4
+      with:
+        java-version: ${{ env.JAVA_VERSION }}
+        distribution: 'temurin'
+        cache: 'gradle'
+    
+    - name: 🔧 Grant execute permission for gradlew
+      run: chmod +x ./gradlew
+    
+    - name: 📊 Cache Gradle packages
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+        restore-keys: |
+          ${{ runner.os }}-gradle-
+    
+    - name: 🧹 Clean build
+      run: ./gradlew clean
+    
+    - name: 🏗️ Build project
+      run: ./gradlew build -x test
+    
+    - name: 🧪 Run tests with coverage
+      run: ./gradlew test jacocoTestReport
+    
+    - name: 📈 Parse test results
+      uses: ./.github/actions/parse-test-results
+      if: success() || failure()
+      with:
+        test-results-path: '**/build/test-results/test/TEST-*.xml'
+        fail-on-error: 'true'
+    
+    - name: 📊 Parse coverage report
+      uses: ./.github/actions/parse-coverage
+      if: success()
+      with:
+        coverage-path: '**/build/reports/jacoco/test/jacocoTestReport.xml'
+        min-coverage: '80'
+    
+    - name: 🚀 Upload test artifacts
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-results-${{ github.run_number }}
+        path: |
+          **/build/reports/tests/
+          **/build/reports/jacoco/
+          **/build/test-results/
+        retention-days: 7
+
+  quality-check:
+    name: 🔍 Code Quality
+    runs-on: ubuntu-latest
+    needs: test
+    
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: ☕ Set up JDK ${{ env.JAVA_VERSION }}
+      uses: actions/setup-java@v4
+      with:
+        java-version: ${{ env.JAVA_VERSION }}
+        distribution: 'temurin'
+        cache: 'gradle'
+    
+    - name: 🔧 Grant execute permission for gradlew
+      run: chmod +x ./gradlew
+    
+    - name: 🧹 Clean and compile
+      run: ./gradlew clean compileJava compileTestJava
+    
+    - name: 🔍 Run SpotBugs (if configured)
+      run: |
+        if ./gradlew tasks | grep -q spotbugsMain; then
+          ./gradlew spotbugsMain spotbugsTest
+        else
+          echo "SpotBugs not configured, skipping..."
+        fi
+      continue-on-error: true
+    
+    - name: 📊 Run Checkstyle (if configured)
+      run: |
+        if ./gradlew tasks | grep -q checkstyleMain; then
+          ./gradlew checkstyleMain checkstyleTest
+        else
+          echo "Checkstyle not configured, skipping..."
+        fi
+      continue-on-error: true
+
+  dependency-check:
+    name: 🔒 Security Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+    
+    - name: ☕ Set up JDK ${{ env.JAVA_VERSION }}
+      uses: actions/setup-java@v4
+      with:
+        java-version: ${{ env.JAVA_VERSION }}
+        distribution: 'temurin'
+        cache: 'gradle'
+    
+    - name: 🔧 Grant execute permission for gradlew
+      run: chmod +x ./gradlew
+    
+    - name: 🔒 Run dependency vulnerability check
+      run: |
+        if ./gradlew tasks | grep -q dependencyCheckAnalyze; then
+          ./gradlew dependencyCheckAnalyze
+        else
+          echo "Dependency check not configured, using gradle dependencies audit..."
+          ./gradlew dependencies --configuration runtimeClasspath | grep -E "(FAILED|SECURITY|CVE)" || echo "No obvious security issues found"
+        fi
+      continue-on-error: true
+
+  build-summary:
+    name: 📋 Build Summary
+    runs-on: ubuntu-latest
+    needs: [test, quality-check, dependency-check]
+    if: always()
+    
+    steps:
+    - name: 📊 Generate build summary
+      run: |
+        echo "## 🏗️ Build Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "| Job | Status |" >> $GITHUB_STEP_SUMMARY
+        echo "|-----|--------|" >> $GITHUB_STEP_SUMMARY
+        echo "| 🧪 Test | ${{ needs.test.result }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| 🔍 Quality Check | ${{ needs.quality-check.result }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| 🔒 Security Scan | ${{ needs.dependency-check.result }} |" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### 📈 Metrics" >> $GITHUB_STEP_SUMMARY
+        echo "- **Branch**: \`${{ github.head_ref || github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY
+        echo "- **Commit**: \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+        echo "- **Run Number**: #${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Triggered by**: ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY

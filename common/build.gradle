@@ -1,0 +1,23 @@
+plugins {
+    id 'java-library'
+}
+
+description = 'Common - 공통 모듈'
+
+dependencies {
+    // Spring Context
+    api 'org.springframework:spring-context'
+    
+    // Validation
+    api 'org.springframework.boot:spring-boot-starter-validation'
+    
+    // JSON
+    api 'com.fasterxml.jackson.core:jackson-databind'
+    api 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+    
+    // Logging
+    api 'org.slf4j:slf4j-api'
+    
+    // Testing
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+}

@@ -1,0 +1,91 @@
+# 커머스 고객 서비스 백엔드 PRD
+
+## 프로젝트 개요
+이커머스 플랫폼의 고객 도메인을 담당하는 마이크로서비스 개발. 고객 계정 관리, 개인정보 관리, 활동 추적 기능을 제공하는 백엔드 서비스 구축.
+
+## 아키텍처
+- 헥사고날 아키텍처 + DDD + CQRS
+- 4계층 구조: Bootstrap, Core, Infrastructure, Common
+- Java 17, Spring Boot 3.2.0, Spring Cloud
+
+## 핵심 도메인
+
+### 1. Customer Account (고객 계정)
+- 회원가입/로그인/로그아웃 (JWT 토큰 기반)
+- JWT 토큰 발급 및 검증
+- Refresh Token을 통한 토큰 갱신
+- 비밀번호 관리 및 재설정
+- 계정 상태 관리 (활성/비활성/휴면)
+- 토큰 기반 세션 관리 (stateless)
+
+### 2. Customer Profile (고객 프로필)
+- 개인 기본정보 관리
+- 배송지 관리 (기본/추가 주소)
+- 연락처 관리
+- 프로필 설정 (선호도, 알림)
+- 고객 등급 관리
+
+### 3. Customer Activity (고객 활동)
+- 접속 기록 및 세션 관리
+- 페이지 뷰 추적
+- 구매 패턴 분석
+- 행동 로그 수집
+
+### 4. Customer Segmentation (고객 세분화)
+- RFM 분석 기반 세분화
+- 고객 생애가치 계산
+- 이탈 위험도 예측
+- 개인화 태그 관리
+
+### 5. Customer Communication (고객 소통)
+- 알림 메시지 관리
+- 고객 문의 처리
+- 마케팅 수신 동의 관리
+- 피드백 수집
+
+## 주요 기능
+
+### Phase 1 (MVP)
+1. Customer Account 도메인 구현 (JWT 토큰 기반)
+2. Customer Profile 도메인 구현
+3. JWT 기반 인증/인가 시스템 구축
+4. 핵심 API 엔드포인트 (토큰 보안 적용)
+5. JWT 토큰 관리 서비스 (발급/검증/갱신)
+
+### Phase 2 (확장)
+1. Customer Activity 도메인 구현
+2. 실시간 활동 추적 시스템
+3. 기본 세분화 로직
+4. 이벤트 발행 시스템
+
+### Phase 3 (고도화)
+1. Customer Segmentation 도메인 구현
+2. 고급 분석 기능 (RFM, CLV)
+3. 예측 모델 통합
+
+### Phase 4 (완성)
+1. Customer Communication 도메인 구현
+2. 고급 보안 기능
+3. 실시간 알림 시스템
+
+## 기술 요구사항
+- 성능: 동시 사용자 10,000명, 응답시간 200ms 이하
+- 보안: AES-256 암호화, JWT 토큰 인증/인가, RBAC 권한관리
+- JWT 설정: RS256 알고리즘, Access Token (15분), Refresh Token (7일)
+- 확장성: JWT 기반 stateless 설계로 수평 확장 지원
+- 통합: Kafka 이벤트 발행, Redis 토큰 캐싱
+
+## API 설계
+- Authentication API (JWT 토큰 발급/갱신/검증)
+- Customer Management API (JWT 보안 적용)
+- Account Management API (토큰 기반 인증)
+- Profile Management API (토큰 권한 검증)
+- Token Management API (토큰 관리 전용)
+
+## 데이터 모델
+- Customer, Account, Profile 엔티티
+- ActivityLog, CustomerSegment 엔티티
+- 이벤트 기반 상태 변경 추적
+
+## 구현 목표
+고객 도메인의 완전한 백엔드 서비스를 구축하여 확장 가능하고 안정적인 이커머스 플랫폼의 핵심 구성요소 완성.

@@ -1,0 +1,31 @@
+description = 'Customer Core - 고객 도메인 핵심 로직'
+
+dependencies {
+    // Common 모듈 의존성 (값 객체, 공통 인터페이스)
+    implementation project(':common')
+    
+    // Spring Context (DI, 트랜잭션)
+    implementation 'org.springframework:spring-context'
+    implementation 'org.springframework:spring-tx'
+    
+    // Validation
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    
+    // JWT 관련 의존성
+    implementation 'io.jsonwebtoken:jjwt-api:0.12.3'
+    implementation 'io.jsonwebtoken:jjwt-impl:0.12.3'
+    implementation 'io.jsonwebtoken:jjwt-jackson:0.12.3'
+    
+    // Security (비밀번호 암호화)
+    implementation 'org.springframework.security:spring-security-crypto'
+    
+    // Lombok
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+    
+    // Testing
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testImplementation 'org.mockito:mockito-core'
+    testImplementation 'org.assertj:assertj-core'
+}

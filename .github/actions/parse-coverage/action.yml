@@ -1,0 +1,88 @@
+name: 'Parse Coverage Report'
+description: 'Parse JaCoCo coverage reports and generate summary'
+inputs:
+  coverage-path:
+    description: 'Path pattern for coverage report files'
+    required: false
+    default: '**/build/reports/jacoco/test/jacocoTestReport.xml'
+  min-coverage:
+    description: 'Minimum coverage percentage required'
+    required: false
+    default: '80'
+outputs:
+  overall-coverage:
+    description: 'Overall coverage percentage'
+    value: ${{ steps.parse.outputs.overall-coverage }}
+  coverage-passed:
+    description: 'Whether coverage threshold was met'
+    value: ${{ steps.parse.outputs.coverage-passed }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Parse coverage reports
+      id: parse
+      shell: bash
+      run: |
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "## 📊 Code Coverage" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        TOTAL_COVERED=0
+        TOTAL_MISSED=0
+        MODULE_COUNT=0
+        
+        echo "| Module | Coverage |" >> $GITHUB_STEP_SUMMARY
+        echo "|--------|----------|" >> $GITHUB_STEP_SUMMARY
+        
+        # JaCoCo XML 리포트에서 커버리지 정보 추출
+        for file in $(find . -path "${{ inputs.coverage-path }}" -type f); do
+          if [ -f "$file" ]; then
+            MODULE=$(echo "$file" | sed 's|.*/\([^/]*\)/build/.*|\1|')
+            
+            # 마지막 INSTRUCTION counter가 전체 요약 정보
+            INSTRUCTION_COVERED=$(grep -o '<counter type="INSTRUCTION"[^>]*covered="[0-9]*"' "$file" | grep -o 'covered="[0-9]*"' | grep -o '[0-9]*' | tail -1 || echo "0")
+            INSTRUCTION_MISSED=$(grep -o '<counter type="INSTRUCTION"[^>]*missed="[0-9]*"' "$file" | grep -o 'missed="[0-9]*"' | grep -o '[0-9]*' | tail -1 || echo "0")
+            
+            if [ $((INSTRUCTION_COVERED + INSTRUCTION_MISSED)) -gt 0 ]; then
+              COVERAGE=$(((INSTRUCTION_COVERED * 100) / (INSTRUCTION_COVERED + INSTRUCTION_MISSED)))
+              
+              # 커버리지 상태 아이콘
+              if [ $COVERAGE -ge ${{ inputs.min-coverage }} ]; then
+                STATUS="✅"
+              else
+                STATUS="❌"
+              fi
+              
+              echo "| $STATUS $MODULE | ${COVERAGE}% (${INSTRUCTION_COVERED}/${INSTRUCTION_COVERED}+${INSTRUCTION_MISSED}) |" >> $GITHUB_STEP_SUMMARY
+              
+              TOTAL_COVERED=$((TOTAL_COVERED + INSTRUCTION_COVERED))
+              TOTAL_MISSED=$((TOTAL_MISSED + INSTRUCTION_MISSED))
+              MODULE_COUNT=$((MODULE_COUNT + 1))
+            fi
+          fi
+        done
+        
+        # 전체 커버리지 계산
+        if [ $((TOTAL_COVERED + TOTAL_MISSED)) -gt 0 ]; then
+          OVERALL_COVERAGE=$(((TOTAL_COVERED * 100) / (TOTAL_COVERED + TOTAL_MISSED)))
+        else
+          OVERALL_COVERAGE=0
+        fi
+        
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### 📈 Overall Coverage: ${OVERALL_COVERAGE}%" >> $GITHUB_STEP_SUMMARY
+        
+        if [ $OVERALL_COVERAGE -ge ${{ inputs.min-coverage }} ]; then
+          echo "✅ Coverage threshold met (≥${{ inputs.min-coverage }}%)" >> $GITHUB_STEP_SUMMARY
+          echo "coverage-passed=true" >> $GITHUB_OUTPUT
+        else
+          echo "❌ Coverage below threshold (<${{ inputs.min-coverage }}%)" >> $GITHUB_STEP_SUMMARY
+          echo "coverage-passed=false" >> $GITHUB_OUTPUT
+        fi
+        
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "커버리지 세부 내용은 아티팩트에서 확인할 수 있습니다." >> $GITHUB_STEP_SUMMARY
+        
+        # 출력 설정
+        echo "overall-coverage=$OVERALL_COVERAGE" >> $GITHUB_OUTPUT

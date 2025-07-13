@@ -1,0 +1,79 @@
+{
+  "master": {
+    "tasks": [
+      {
+        "id": 1,
+        "title": "Create Customer Account Core Domain",
+        "description": "Implement the customer account domain with JWT-based authentication following hexagonal architecture principles",
+        "details": "Create customer-core module with Customer aggregate root, value objects (CustomerId, Email, Password), CustomerAccount entity with authentication capabilities. Implement CustomerRepository interface and CustomerDomainService for account operations. Include domain events for account creation, login, and password changes. Use BCrypt for password hashing and validate email format. Ensure proper encapsulation and domain invariants.",
+        "testStrategy": "Unit tests for Customer aggregate, value objects validation, domain service operations, and domain events. Test password hashing, email validation, and business rule enforcement. Mock repository dependencies and verify domain event publishing.",
+        "priority": "high",
+        "dependencies": [],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 2,
+        "title": "Implement JWT Token Management Service",
+        "description": "Develop JWT token generation, validation, and management service using RS256 algorithm",
+        "details": "Create JwtTokenService with RS256 public/private key pair generation and management. Implement token generation with customer claims, token validation, refresh token mechanism, and token blacklisting for logout. Store keys securely and configure token expiration (15min access, 7day refresh). Include token parsing utilities and custom JWT exceptions for invalid/expired tokens.",
+        "testStrategy": "Unit tests for token generation, validation, expiration handling, and key management. Integration tests for token lifecycle scenarios. Test security edge cases like tampered tokens, expired tokens, and invalid signatures. Verify token claims and audience validation.",
+        "priority": "high",
+        "dependencies": [
+          1
+        ],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 3,
+        "title": "Create Customer Profile Core Domain",
+        "description": "Implement customer profile domain for managing customer personal information and preferences",
+        "details": "Create CustomerProfile aggregate with profile data (name, phone, address, preferences). Implement ProfileId value object, CustomerProfileRepository interface, and CustomerProfileDomainService. Add domain events for profile creation, updates, and deletion. Ensure profile is linked to CustomerAccount via CustomerId. Include validation for phone numbers, addresses, and personal data constraints.",
+        "testStrategy": "Unit tests for CustomerProfile aggregate, value object validation, and domain service operations. Test profile data validation rules, profile linking with customer account, and domain event publishing. Verify data integrity and business rule compliance.",
+        "priority": "medium",
+        "dependencies": [
+          1
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 4,
+        "title": "Implement Infrastructure Layer with JWT Security",
+        "description": "Create infrastructure adapters for persistence, JWT security configuration, and external integrations",
+        "details": "Implement JPA repository adapters for CustomerRepository and CustomerProfileRepository using Spring Data JPA. Create JWT authentication filter, security configuration with Spring Security, and JWT authentication provider. Set up database schemas for customers and profiles with proper indexing. Implement password encoder, JWT token storage (Redis for blacklist), and security exception handlers.",
+        "testStrategy": "Integration tests for repository adapters with H2/testcontainers. Security integration tests for JWT authentication flow, token validation, and Spring Security configuration. Test database constraints, data persistence, and security filter chain behavior.",
+        "priority": "medium",
+        "dependencies": [
+          1,
+          2,
+          3
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 5,
+        "title": "Develop Customer Service API Endpoints",
+        "description": "Create REST API controllers and application services for customer account and profile management",
+        "details": "Implement CustomerController with endpoints: POST /customers/register, POST /customers/login, POST /customers/refresh, DELETE /customers/logout, GET /customers/profile, PUT /customers/profile. Create application services (CustomerApplicationService, CustomerProfileApplicationService) with DTOs for request/response mapping. Add input validation, error handling, and proper HTTP status codes. Include OpenAPI documentation and rate limiting for authentication endpoints.",
+        "testStrategy": "Integration tests for all API endpoints using MockMvc or TestRestTemplate. Test authentication flows, profile CRUD operations, JWT token handling, and error scenarios. Verify input validation, HTTP status codes, and response formats. Test security restrictions and unauthorized access scenarios.",
+        "priority": "medium",
+        "dependencies": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "status": "pending",
+        "subtasks": []
+      }
+    ],
+    "metadata": {
+      "created": "2025-07-12T02:33:12.025Z",
+      "updated": "2025-07-12T12:46:25.020Z",
+      "description": "Tasks for master context"
+    }
+  }
+}

@@ -1,0 +1,77 @@
+name: 'Parse Test Results'
+description: 'Parse JUnit test results and generate summary'
+inputs:
+  test-results-path:
+    description: 'Path pattern for test result files'
+    required: false
+    default: '**/build/test-results/test/TEST-*.xml'
+  fail-on-error:
+    description: 'Fail the action if tests failed'
+    required: false
+    default: 'true'
+outputs:
+  total-tests:
+    description: 'Total number of tests'
+    value: ${{ steps.parse.outputs.total-tests }}
+  passed-tests:
+    description: 'Number of passed tests'
+    value: ${{ steps.parse.outputs.passed-tests }}
+  failed-tests:
+    description: 'Number of failed tests'
+    value: ${{ steps.parse.outputs.failed-tests }}
+  error-tests:
+    description: 'Number of error tests'
+    value: ${{ steps.parse.outputs.error-tests }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Parse test results
+      id: parse
+      shell: bash
+      run: |
+        echo "## 🧪 Test Results" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        # 테스트 결과 파일 찾기
+        TOTAL_TESTS=0
+        TOTAL_FAILURES=0
+        TOTAL_ERRORS=0
+        PASSED_TESTS=0
+        
+        echo "Searching for test results in: ${{ inputs.test-results-path }}"
+        
+        for file in $(find . -path "${{ inputs.test-results-path }}" -type f); do
+          if [ -f "$file" ]; then
+            echo "Processing: $file"
+            TESTS=$(grep -o 'tests="[0-9]*"' "$file" | grep -o '[0-9]*' | head -1 || echo "0")
+            FAILURES=$(grep -o 'failures="[0-9]*"' "$file" | grep -o '[0-9]*' | head -1 || echo "0")
+            ERRORS=$(grep -o 'errors="[0-9]*"' "$file" | grep -o '[0-9]*' | head -1 || echo "0")
+            
+            TOTAL_TESTS=$((TOTAL_TESTS + TESTS))
+            TOTAL_FAILURES=$((TOTAL_FAILURES + FAILURES))
+            TOTAL_ERRORS=$((TOTAL_ERRORS + ERRORS))
+          fi
+        done
+        
+        PASSED_TESTS=$((TOTAL_TESTS - TOTAL_FAILURES - TOTAL_ERRORS))
+        
+        # GitHub Step Summary에 결과 출력
+        echo "| Status | Count |" >> $GITHUB_STEP_SUMMARY
+        echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+        echo "| ✅ Passed | $PASSED_TESTS |" >> $GITHUB_STEP_SUMMARY
+        echo "| ❌ Failed | $TOTAL_FAILURES |" >> $GITHUB_STEP_SUMMARY
+        echo "| 🚫 Errors | $TOTAL_ERRORS |" >> $GITHUB_STEP_SUMMARY
+        echo "| 📊 Total | $TOTAL_TESTS |" >> $GITHUB_STEP_SUMMARY
+        
+        # 출력 설정
+        echo "total-tests=$TOTAL_TESTS" >> $GITHUB_OUTPUT
+        echo "passed-tests=$PASSED_TESTS" >> $GITHUB_OUTPUT
+        echo "failed-tests=$TOTAL_FAILURES" >> $GITHUB_OUTPUT
+        echo "error-tests=$TOTAL_ERRORS" >> $GITHUB_OUTPUT
+        
+        # 실패 시 처리
+        if [ "${{ inputs.fail-on-error }}" = "true" ] && [ $((TOTAL_FAILURES + TOTAL_ERRORS)) -gt 0 ]; then
+          echo "❌ Tests failed!"
+          exit 1
+        fi

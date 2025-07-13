@@ -1,0 +1,15 @@
+# Customer Service MVP
+
+## 목표
+JWT 토큰 기반 고객 서비스 백엔드 MVP 개발
+
+## 핵심 기능
+1. Customer Account 도메인 (JWT 인증)
+2. Customer Profile 도메인
+3. JWT 토큰 관리 서비스
+4. 기본 API 엔드포인트
+
+## 기술 스택
+- Java 17, Spring Boot 3.2.0
+- JWT 토큰 인증 (RS256)
+- 헥사고날 아키텍처

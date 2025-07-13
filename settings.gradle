@@ -1,0 +1,23 @@
+rootProject.name = 'msa_ecommerce_customer'
+
+// Common module
+include 'common'
+
+include 'customer-core'
+project(':customer-core').projectDir = file('core/customer-core')
+
+// Infrastructure modules
+include 'persistence'
+project(':persistence').projectDir = file('infrastructure/persistence')
+
+// 향후 추가 예정
+// include 'infrastructure:messaging'
+// include 'infrastructure:external'
+// include 'infrastructure:cache'
+
+// Bootstrap modules (향후 추가 예정)
+// include 'bootstrap:product-api'
+// include 'bootstrap:cart-api'
+// include 'bootstrap:order-api'
+// include 'bootstrap:inventory-api'
+// include 'bootstrap:gateway'
