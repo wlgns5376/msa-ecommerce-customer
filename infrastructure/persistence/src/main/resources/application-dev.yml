@@ -1,7 +1,7 @@
 # Development Profile - H2 Database
 spring:
   datasource:
-    url: jdbc:h2:mem:commerce_dev;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    url: jdbc:h2:mem:commerce_dev;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=MariaDB
     driver-class-name: org.h2.Driver
     username: sa
     password: 
@@ -14,9 +14,25 @@ spring:
       ddl-auto: create-drop
     database-platform: org.hibernate.dialect.H2Dialect
     defer-datasource-initialization: true
+    
+  # 개발환경용 Redis (로컬)
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      timeout: 2000ms
+      
+  # Security 개발 설정
+  security:
+    jwt:
+      secret-key: dev-secret-key-for-jwt-token-generation-1234567890-very-long
+      access-token-expiration: 7200000  # 2시간 (개발용으로 더 길게)
+      refresh-token-expiration: 1209600000  # 14일
 
 logging:
   level:
     org.hibernate.SQL: DEBUG
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
     com.commerce: DEBUG
+    org.springframework.security: DEBUG
+    org.springframework.web: DEBUG

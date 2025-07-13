@@ -41,6 +41,29 @@ public interface CustomerProfileRepository {
     boolean existsByCustomerId(CustomerId customerId);
     
     /**
+     * 활성 상태의 프로필을 고객 ID로 조회합니다.
+     * 
+     * @param customerId 고객 ID
+     * @return 조회된 프로필 (Optional)
+     */
+    Optional<CustomerProfile> findActiveByCustomerId(CustomerId customerId);
+    
+    /**
+     * 고객 ID로 주소 정보를 포함한 프로필을 조회합니다.
+     * 
+     * @param customerId 고객 ID
+     * @return 조회된 프로필 (Optional)
+     */
+    Optional<CustomerProfile> findByCustomerIdWithAddresses(CustomerId customerId);
+    
+    /**
+     * 프로필을 삭제합니다.
+     * 
+     * @param profile 삭제할 프로필
+     */
+    void delete(CustomerProfile profile);
+    
+    /**
      * 프로필을 삭제합니다.
      * 
      * @param profileId 삭제할 프로필 ID

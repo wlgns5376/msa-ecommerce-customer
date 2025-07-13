@@ -3,24 +3,26 @@ package com.commerce.customer.core.domain.model;
 import lombok.Getter;
 
 import java.util.Objects;
-import java.util.UUID;
+import java.util.concurrent.atomic.AtomicLong;
 
 @Getter
 public class AccountId {
-    private final String value;
+    private static final AtomicLong SEQUENCE = new AtomicLong(1);
+    
+    private final Long value;
 
-    private AccountId(String value) {
-        if (value == null || value.trim().isEmpty()) {
-            throw new IllegalArgumentException("계정 ID는 필수값입니다.");
+    private AccountId(Long value) {
+        if (value == null || value <= 0) {
+            throw new IllegalArgumentException("계정 ID는 양수여야 합니다.");
         }
         this.value = value;
     }
 
     public static AccountId generate() {
-        return new AccountId(UUID.randomUUID().toString());
+        return new AccountId(SEQUENCE.getAndIncrement());
     }
 
-    public static AccountId of(String value) {
+    public static AccountId of(Long value) {
         return new AccountId(value);
     }
 
@@ -39,6 +41,6 @@ public class AccountId {
 
     @Override
     public String toString() {
-        return value;
+        return value.toString();
     }
 }

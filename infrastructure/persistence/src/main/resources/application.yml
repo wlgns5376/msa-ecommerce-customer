@@ -1,14 +1,45 @@
-# 공통 JPA 설정
+# 공통 설정
 spring:
   profiles:
     active: dev
+    
+  # JPA 설정
   jpa:
     show-sql: true
     properties:
       hibernate:
         format_sql: true
         use_sql_comments: true
+        dialect: org.hibernate.dialect.MariaDBDialect
     hibernate:
       naming:
         physical-strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
         implicit-strategy: org.springframework.boot.orm.jpa.hibernate.SpringImplicitNamingStrategy
+      ddl-auto: validate
+    
+  # Redis 설정
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+          
+  # Security 설정
+  security:
+    jwt:
+      secret-key: ${JWT_SECRET_KEY:mySecretKeyForJWTTokenGeneration1234567890}
+      access-token-expiration: 3600000  # 1시간 (밀리초)
+      refresh-token-expiration: 604800000  # 7일 (밀리초)
+
+# 로깅 설정
+logging:
+  level:
+    com.commerce: DEBUG
+    org.springframework.security: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE

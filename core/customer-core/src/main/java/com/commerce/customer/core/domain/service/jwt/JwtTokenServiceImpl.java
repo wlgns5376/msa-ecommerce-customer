@@ -165,13 +165,13 @@ public class JwtTokenServiceImpl implements JwtTokenService {
         LocalDateTime expiresAt = now.plusMinutes(tokenType.getExpirationMinutes());
 
         Map<String, Object> claims = new HashMap<>();
-        claims.put(ACCOUNT_ID_CLAIM, accountId.getValue());
+        claims.put(ACCOUNT_ID_CLAIM, accountId.getValue().toString());
         claims.put(EMAIL_CLAIM, email.getValue());
         claims.put(TOKEN_TYPE_CLAIM, tokenType.name());
 
         String tokenValue = Jwts.builder()
                 .claims(claims)
-                .subject(customerId.getValue())
+                .subject(customerId.getValue().toString())
                 .issuer(ISSUER)
                 .audience().add(AUDIENCE).and()
                 .issuedAt(convertToDate(now))

@@ -38,8 +38,8 @@ public class JwtClaims {
         LocalDateTime expiresAt = now.plusMinutes(tokenType.getExpirationMinutes());
 
         return new JwtClaims(
-            customerId.getValue(),
-            accountId.getValue(),
+            customerId.getValue().toString(),
+            accountId.getValue().toString(),
             email.getValue(),
             issuer,
             audience,
@@ -56,11 +56,11 @@ public class JwtClaims {
     }
 
     public CustomerId getCustomerId() {
-        return CustomerId.of(subject);
+        return CustomerId.of(Long.valueOf(subject));
     }
 
     public AccountId getAccountIdObject() {
-        return AccountId.of(accountId);
+        return AccountId.of(Long.valueOf(accountId));
     }
 
     public Email getEmailObject() {
