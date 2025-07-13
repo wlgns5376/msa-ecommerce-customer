@@ -117,7 +117,7 @@ class CustomerProfileDomainServiceTest {
         // Given
         ProfileId profileId = ProfileId.generate();
         CustomerProfile existingProfile = createValidProfile();
-        Address address = Address.create(AddressType.HOME, "집", "12345", "서울특별시 강남구 테헤란로 123", "456호");
+        Address address = Address.create(AddressType.HOME, "집", "12345", "서울특별시 강남구 테헤란로 123", null, "456호");
         
         given(profileRepository.findById(profileId)).willReturn(Optional.of(existingProfile));
         given(addressValidationService.validateAddress("12345", "서울특별시 강남구 테헤란로 123")).willReturn(true);
@@ -139,7 +139,7 @@ class CustomerProfileDomainServiceTest {
         // Given
         ProfileId profileId = ProfileId.generate();
         CustomerProfile existingProfile = createValidProfile();
-        Address address = Address.create(AddressType.HOME, "집", "12345", "잘못된주소", "456호");
+        Address address = Address.create(AddressType.HOME, "집", "12345", "잘못된주소", null, "456호");
         
         given(profileRepository.findById(profileId)).willReturn(Optional.of(existingProfile));
         given(addressValidationService.validateAddress("12345", "잘못된주소")).willReturn(false);
@@ -156,8 +156,8 @@ class CustomerProfileDomainServiceTest {
         // Given
         ProfileId profileId = ProfileId.generate();
         CustomerProfile existingProfile = createValidProfile();
-        Address address1 = Address.create(AddressType.HOME, "집", "12345", "서울특별시 강남구 테헤란로 123", "456호");
-        Address address2 = Address.create(AddressType.WORK, "회사", "54321", "부산광역시 해운대구 센텀로 456", "789호");
+        Address address1 = Address.create(AddressType.HOME, "집", "12345", "서울특별시 강남구 테헤란로 123", null, "456호");
+        Address address2 = Address.create(AddressType.WORK, "회사", "54321", "부산광역시 해운대구 센텀로 456", null, "789호");
         existingProfile.addAddress(address1);
         existingProfile.addAddress(address2);
         
@@ -195,7 +195,7 @@ class CustomerProfileDomainServiceTest {
     @DisplayName("주소 형식을 검증할 수 있다")
     void validateAddress() {
         // Given
-        Address validAddress = Address.create(AddressType.HOME, "집", "12345", "서울특별시 강남구 테헤란로 123", "456호");
+        Address validAddress = Address.create(AddressType.HOME, "집", "12345", "서울특별시 강남구 테헤란로 123", null, "456호");
 
         given(addressValidationService.validateAddress("12345", "서울특별시 강남구 테헤란로 123")).willReturn(true);
 

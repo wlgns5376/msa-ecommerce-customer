@@ -3,24 +3,25 @@ package com.commerce.customer.core.domain.model.profile;
 import lombok.Getter;
 
 import java.util.Objects;
-import java.util.UUID;
+import java.util.concurrent.atomic.AtomicLong;
 
 @Getter
 public class AddressId {
-    private final String value;
+    private static final AtomicLong SEQUENCE = new AtomicLong(1);
+    private final Long value;
 
-    private AddressId(String value) {
-        if (value == null || value.trim().isEmpty()) {
-            throw new IllegalArgumentException("주소 ID는 필수값입니다.");
+    private AddressId(Long value) {
+        if (value == null || value <= 0) {
+            throw new IllegalArgumentException("주소 ID는 양수여야 합니다.");
         }
         this.value = value;
     }
 
     public static AddressId generate() {
-        return new AddressId(UUID.randomUUID().toString());
+        return new AddressId(SEQUENCE.getAndIncrement());
     }
 
-    public static AddressId of(String value) {
+    public static AddressId of(Long value) {
         return new AddressId(value);
     }
 
@@ -39,6 +40,6 @@ public class AddressId {
 
     @Override
     public String toString() {
-        return value;
+        return String.valueOf(value);
     }
 }

@@ -15,18 +15,20 @@ public class Address {
     private String alias;
     private final String zipCode;
     private final String roadAddress;
+    private final String jibunAddress;
     private final String detailAddress;
     private String deliveryMemo;
     private boolean isDefault;
     private final LocalDateTime createdAt;
 
     private Address(AddressId addressId, AddressType type, String alias, String zipCode, 
-                   String roadAddress, String detailAddress, String deliveryMemo, 
+                   String roadAddress, String jibunAddress, String detailAddress, String deliveryMemo, 
                    boolean isDefault, LocalDateTime createdAt) {
         this.addressId = Objects.requireNonNull(addressId, "주소 ID는 필수값입니다.");
         this.type = Objects.requireNonNull(type, "주소 타입은 필수값입니다.");
         this.zipCode = Objects.requireNonNull(zipCode, "우편번호는 필수값입니다.");
         this.roadAddress = Objects.requireNonNull(roadAddress, "도로명 주소는 필수값입니다.");
+        this.jibunAddress = jibunAddress; // nullable - 지번 주소는 선택사항
         this.detailAddress = detailAddress; // nullable
         this.deliveryMemo = deliveryMemo; // nullable
         this.isDefault = isDefault;
@@ -38,13 +40,14 @@ public class Address {
     }
 
     public static Address create(AddressType type, String alias, String zipCode, 
-                               String roadAddress, String detailAddress) {
+                               String roadAddress, String jibunAddress, String detailAddress) {
         return new Address(
             AddressId.generate(),
             type,
             alias,
             zipCode,
             roadAddress,
+            jibunAddress,
             detailAddress,
             null,
             false,
@@ -109,6 +112,7 @@ public class Address {
                 ", alias='" + alias + '\'' +
                 ", zipCode='" + zipCode + '\'' +
                 ", roadAddress='" + roadAddress + '\'' +
+                ", jibunAddress='" + jibunAddress + '\'' +
                 ", detailAddress='" + detailAddress + '\'' +
                 ", isDefault=" + isDefault +
                 '}';

@@ -13,9 +13,13 @@ public class PersonalInfo {
 
     private PersonalInfo(FullName fullName, BirthDate birthDate, Gender gender, ProfileImage profileImage) {
         this.fullName = Objects.requireNonNull(fullName, "이름은 필수값입니다.");
-        this.birthDate = Objects.requireNonNull(birthDate, "생년월일은 필수값입니다.");
-        this.gender = Objects.requireNonNull(gender, "성별은 필수값입니다.");
+        this.birthDate = birthDate; // nullable - 개인정보보호 고려
+        this.gender = gender; // nullable - 개인정보보호 고려
         this.profileImage = profileImage; // nullable
+    }
+
+    public static PersonalInfo of(FullName fullName) {
+        return new PersonalInfo(fullName, null, null, null);
     }
 
     public static PersonalInfo of(FullName fullName, BirthDate birthDate, Gender gender) {

@@ -74,7 +74,7 @@ class CustomerProfileTest {
     void addAddress() {
         // Given
         CustomerProfile profile = createValidProfile();
-        Address address = Address.create(AddressType.HOME, "집", "12345", "서울특별시 강남구 테헤란로 123", "456호");
+        Address address = Address.create(AddressType.HOME, "집", "12345", "서울특별시 강남구 테헤란로 123", null, "456호");
 
         // When
         profile.addAddress(address);
@@ -90,8 +90,8 @@ class CustomerProfileTest {
     void removeAddress() {
         // Given
         CustomerProfile profile = createValidProfile();
-        Address address1 = Address.create(AddressType.HOME, "집", "12345", "서울특별시 강남구 테헤란로 123", "456호");
-        Address address2 = Address.create(AddressType.WORK, "회사", "54321", "부산광역시 해운대구 센텀로 456", "789호");
+        Address address1 = Address.create(AddressType.HOME, "집", "12345", "서울특별시 강남구 테헤란로 123", null, "456호");
+        Address address2 = Address.create(AddressType.WORK, "회사", "54321", "부산광역시 해운대구 센텀로 456", null, "789호");
         profile.addAddress(address1);
         profile.addAddress(address2);
 
@@ -109,8 +109,8 @@ class CustomerProfileTest {
     void setDefaultAddress() {
         // Given
         CustomerProfile profile = createValidProfile();
-        Address address1 = Address.create(AddressType.HOME, "집", "12345", "서울특별시 강남구 테헤란로 123", "456호");
-        Address address2 = Address.create(AddressType.WORK, "회사", "54321", "부산광역시 해운대구 센텀로 456", "789호");
+        Address address1 = Address.create(AddressType.HOME, "집", "12345", "서울특별시 강남구 테헤란로 123", null, "456호");
+        Address address2 = Address.create(AddressType.WORK, "회사", "54321", "부산광역시 해운대구 센텀로 456", null, "789호");
         profile.addAddress(address1);
         profile.addAddress(address2);
 
@@ -192,13 +192,13 @@ class CustomerProfileTest {
         // 10개의 주소 추가
         for (int i = 1; i <= 10; i++) {
             Address address = Address.create(AddressType.HOME, "주소" + i, "1234" + i % 10, 
-                "서울특별시 강남구 테헤란로 " + i, i + "호");
+                "서울특별시 강남구 테헤란로 " + i, null, i + "호");
             profile.addAddress(address);
         }
 
         // When & Then
         Address extraAddress = Address.create(AddressType.HOME, "추가주소", "12345", 
-            "서울특별시 강남구 테헤란로 999", "999호");
+            "서울특별시 강남구 테헤란로 999", null, "999호");
         assertThatThrownBy(() -> profile.addAddress(extraAddress))
             .isInstanceOf(IllegalStateException.class)
             .hasMessage("주소는 최대 10개까지 등록 가능합니다.");
@@ -222,7 +222,7 @@ class CustomerProfileTest {
     void throwExceptionWhenRemoveLastAddress() {
         // Given
         CustomerProfile profile = createValidProfile();
-        Address address = Address.create(AddressType.HOME, "집", "12345", "서울특별시 강남구 테헤란로 123", "456호");
+        Address address = Address.create(AddressType.HOME, "집", "12345", "서울특별시 강남구 테헤란로 123", null, "456호");
         profile.addAddress(address);
 
         // When & Then

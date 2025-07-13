@@ -3,24 +3,25 @@ package com.commerce.customer.core.domain.model.profile;
 import lombok.Getter;
 
 import java.util.Objects;
-import java.util.UUID;
+import java.util.concurrent.atomic.AtomicLong;
 
 @Getter
 public class ProfileId {
-    private final String value;
+    private static final AtomicLong SEQUENCE = new AtomicLong(1);
+    private final Long value;
 
-    private ProfileId(String value) {
-        if (value == null || value.trim().isEmpty()) {
-            throw new IllegalArgumentException("프로필 ID는 필수값입니다.");
+    private ProfileId(Long value) {
+        if (value == null || value <= 0) {
+            throw new IllegalArgumentException("프로필 ID는 양수여야 합니다.");
         }
         this.value = value;
     }
 
     public static ProfileId generate() {
-        return new ProfileId(UUID.randomUUID().toString());
+        return new ProfileId(SEQUENCE.getAndIncrement());
     }
 
-    public static ProfileId of(String value) {
+    public static ProfileId of(Long value) {
         return new ProfileId(value);
     }
 
@@ -39,6 +40,6 @@ public class ProfileId {
 
     @Override
     public String toString() {
-        return value;
+        return String.valueOf(value);
     }
 }
