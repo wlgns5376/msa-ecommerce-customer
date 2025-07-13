@@ -54,7 +54,16 @@ public class AccountRepositoryAdapter implements AccountRepository {
 
     @Override
     public void delete(Account account) {
-        accountJpaRepository.deleteById(account.getAccountId().getValue());
+        if (!account.getAccountId().isAssigned()) {
+            throw new IllegalStateException("ID가 할당되지 않은 계정은 삭제할 수 없습니다.");
+        }
+        
+        // Soft Delete: 물리적 삭제 대신 논리적 삭제 수행
+        accountJpaRepository.findById(account.getAccountId().getValue())
+            .ifPresent(entity -> {
+                entity.markAsDeleted();
+                accountJpaRepository.save(entity);
+            });
     }
 
     @Override

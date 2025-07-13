@@ -12,6 +12,7 @@ public class AccountMapper {
             return null;
         }
 
+        // ID가 할당되지 않은 새로운 Account의 경우 accountId를 설정하지 않음 (DB에서 auto-increment)
         return AccountEntity.builder()
                 .customerId(account.getCustomerId().getValue())
                 .email(account.getEmail().getValue())
@@ -26,13 +27,13 @@ public class AccountMapper {
             return null;
         }
 
-        // accountId가 null인 경우 임시 ID 생성 (새로 생성된 엔티티의 경우)
-        AccountId accountId = entity.getAccountId() != null 
-            ? AccountId.of(entity.getAccountId()) 
-            : AccountId.generate();
+        // DB에서 조회된 Entity는 항상 유효한 accountId를 가져야 함
+        if (entity.getAccountId() == null) {
+            throw new IllegalStateException("Entity의 accountId가 null입니다. DB 조회 결과가 올바르지 않습니다.");
+        }
 
         return Account.restore(
-                accountId,
+                AccountId.of(entity.getAccountId()),
                 CustomerId.of(entity.getCustomerId()),
                 Email.of(entity.getEmail()),
                 Password.ofEncoded(entity.getPassword()), // 엔티티의 password는 이미 인코딩된 값

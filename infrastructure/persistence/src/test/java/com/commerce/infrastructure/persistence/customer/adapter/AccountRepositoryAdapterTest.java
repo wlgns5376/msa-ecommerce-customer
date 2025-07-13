@@ -22,6 +22,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.never;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("AccountRepositoryAdapter 테스트")
@@ -241,10 +242,17 @@ class AccountRepositoryAdapterTest {
     @Test
     @DisplayName("계정을 성공적으로 삭제한다")
     void delete_Success() {
+        // Given
+        given(accountJpaRepository.findById(1L)).willReturn(Optional.of(testAccountEntity));
+        given(accountJpaRepository.save(testAccountEntity)).willReturn(testAccountEntity);
+
         // When
         accountRepositoryAdapter.delete(testAccount);
 
         // Then
-        then(accountJpaRepository).should(times(1)).deleteById(1L);
+        then(accountJpaRepository).should(times(1)).findById(1L);
+        then(accountJpaRepository).should(times(1)).save(testAccountEntity);
+        // 물리적 삭제 대신 soft delete 확인
+        then(accountJpaRepository).should(never()).deleteById(anyLong());
     }
 }
