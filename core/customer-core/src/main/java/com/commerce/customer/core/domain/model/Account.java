@@ -47,6 +47,18 @@ public class Account {
         return account;
     }
 
+    /**
+     * 영속성 계층에서 데이터를 복원할 때 사용하는 팩토리 메서드
+     */
+    public static Account restore(AccountId accountId, CustomerId customerId, Email email, 
+                                Password password, AccountStatus status, LocalDateTime createdAt,
+                                LocalDateTime updatedAt, LocalDateTime lastLoginAt) {
+        Account account = new Account(accountId, customerId, email, password, status, createdAt);
+        account.updatedAt = updatedAt;
+        account.lastLoginAt = lastLoginAt;
+        return account;
+    }
+
     public void activate() {
         if (!status.canActivate()) {
             throw new IllegalStateException("현재 상태에서는 활성화할 수 없습니다: " + status);

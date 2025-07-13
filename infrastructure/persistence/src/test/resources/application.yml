@@ -1,0 +1,54 @@
+# Test Profile Configuration
+spring:
+  # H2 인메모리 데이터베이스
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=MariaDB
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  
+  # JPA 테스트 설정
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    database-platform: org.hibernate.dialect.H2Dialect
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        use_sql_comments: true
+    defer-datasource-initialization: false
+    
+  # Redis 테스트 설정 (Testcontainers가 오버라이드)
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      timeout: 1000ms
+      
+  # Security 테스트 설정
+  security:
+    jwt:
+      secret-key: test-secret-key-for-jwt-token-generation-1234567890-very-long-key
+      access-token-expiration: 3600000  # 1시간
+      refresh-token-expiration: 604800000  # 7일
+
+# 로깅 설정
+logging:
+  level:
+    com.commerce: DEBUG
+    org.springframework.security: WARN
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: WARN
+    org.springframework.data.redis: DEBUG
+    org.testcontainers: INFO
+    
+# 테스트 관련 설정
+management:
+  endpoints:
+    enabled-by-default: false
+    
+# H2 Console 비활성화 (테스트용)
+h2:
+  console:
+    enabled: false

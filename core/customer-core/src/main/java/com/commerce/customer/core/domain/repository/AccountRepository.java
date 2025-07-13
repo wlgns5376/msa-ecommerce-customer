@@ -35,6 +35,21 @@ public interface AccountRepository {
     boolean existsByEmail(Email email);
     
     /**
+     * 고객 ID 중복 여부를 확인합니다.
+     */
+    boolean existsByCustomerId(CustomerId customerId);
+    
+    /**
+     * 활성 상태의 계정을 이메일로 조회합니다.
+     */
+    Optional<Account> findActiveByEmail(Email email);
+    
+    /**
+     * 활성 상태의 계정을 고객 ID로 조회합니다.
+     */
+    Optional<Account> findActiveByCustomerId(CustomerId customerId);
+    
+    /**
      * 계정을 삭제합니다.
      */
     void delete(Account account);
