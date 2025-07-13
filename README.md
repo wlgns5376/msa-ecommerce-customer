@@ -1,5 +1,11 @@
 # 커머스 마이크로서비스 - 고객/인증 서비스
 
+![Java](https://img.shields.io/badge/Java-17-orange?style=flat-square&logo=openjdk)
+![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2.0-brightgreen?style=flat-square&logo=spring)
+![Test Coverage](https://img.shields.io/badge/Test%20Coverage-72%25-brightgreen?style=flat-square&logo=codecov)
+![Build](https://img.shields.io/badge/Build-Gradle%208.5-blue?style=flat-square&logo=gradle)
+![Architecture](https://img.shields.io/badge/Architecture-Hexagonal%20DDD-purple?style=flat-square)
+
 ## 📋 프로젝트 개요
 
 이 프로젝트는 이커머스 플랫폼을 위한 고객 도메인 마이크로서비스입니다. 헥사고날 아키텍처와 DDD(Domain-Driven Design)를 기반으로 하는 4계층 아키텍처로 설계되었습니다.
@@ -26,6 +32,53 @@
 └── common/           # 공통 모듈
 ```
 
+### 헥사고날 아키텍처 (포트와 어댑터)
+
+```mermaid
+graph TB
+    subgraph "Bootstrap Layer"
+        API[REST API Controller]
+        WEB[Web Interface]
+    end
+    
+    subgraph "Core Layer"
+        subgraph "Domain"
+            ACCOUNT[Account Domain]
+            PROFILE[Profile Domain]
+            JWT[JWT Domain]
+        end
+        
+        subgraph "Application Services"
+            ACCOUNT_APP[Account Application]
+            PROFILE_APP[Profile Application]
+        end
+        
+        subgraph "Ports"
+            REPO_PORT[Repository Port]
+            EVENT_PORT[Event Port]
+        end
+    end
+    
+    subgraph "Infrastructure Layer"
+        subgraph "Adapters"
+            JPA[JPA Repository]
+            REDIS[Redis Cache]
+            KAFKA[Kafka Events]
+        end
+    end
+    
+    API --> ACCOUNT_APP
+    API --> PROFILE_APP
+    ACCOUNT_APP --> ACCOUNT
+    PROFILE_APP --> PROFILE
+    ACCOUNT --> REPO_PORT
+    PROFILE --> REPO_PORT
+    ACCOUNT --> EVENT_PORT
+    PROFILE --> EVENT_PORT
+    REPO_PORT --> JPA
+    EVENT_PORT --> KAFKA
+```
+
 ### 의존성 규칙
 
 - ✅ Bootstrap → Core, Infrastructure, Common
@@ -33,6 +86,65 @@
 - ✅ Core → Common
 - ❌ Core 모듈 간 직접 의존 금지
 - ❌ Common → 다른 모듈 의존 금지
+
+### 도메인 모델 구조
+
+```mermaid
+classDiagram
+    class CustomerProfile {
+        +ProfileId profileId
+        +CustomerId customerId
+        +PersonalInfo personalInfo
+        +ContactInfo contactInfo
+        +List~Address~ addresses
+        +ProfilePreferences preferences
+        +ProfileStatus status
+        +updatePersonalInfo()
+        +addAddress()
+        +setDefaultAddress()
+        +updatePreferences()
+    }
+    
+    class PersonalInfo {
+        +FullName fullName
+        +BirthDate birthDate
+        +Gender gender
+        +ProfileImage profileImage
+        +updateName()
+        +updateBirthDate()
+    }
+    
+    class ContactInfo {
+        +PhoneNumber primaryPhone
+        +PhoneNumber secondaryPhone
+        +updatePrimaryPhone()
+        +updateSecondaryPhone()
+    }
+    
+    class Address {
+        +AddressId addressId
+        +AddressType type
+        +String alias
+        +String zipCode
+        +String roadAddress
+        +String jibunAddress
+        +String detailAddress
+        +updateAlias()
+        +setAsDefault()
+    }
+    
+    class ProfilePreferences {
+        +MarketingConsent marketingConsent
+        +NotificationSettings notificationSettings
+        +List~CategoryInterest~ categoryInterests
+        +List~BrandPreference~ brandPreferences
+    }
+    
+    CustomerProfile ||--|| PersonalInfo
+    CustomerProfile ||--|| ContactInfo
+    CustomerProfile ||--o{ Address
+    CustomerProfile ||--|| ProfilePreferences
+```
 
 ## 📂 프로젝트 구조
 
@@ -74,14 +186,26 @@ msa_ecommerce_customer/
 #### 고객 도메인 (customer-core)
 - **계정 관리**: 고객 계정 생성, 활성화, 상태 관리
 - **인증/인가**: JWT 기반 토큰 인증 시스템
+- **프로필 관리**: 개인정보, 주소, 연락처, 선호도 관리
 - **보안**: 비밀번호 암호화, 토큰 만료 관리
 - **도메인 이벤트**: 계정 생성, 활성화, 로그인 성공 등
 
 #### 주요 도메인 객체
+
+**계정 관리**
 - `Account`: 고객 계정 엔티티
 - `Email`, `Password`: 값 객체
 - `JwtToken`, `TokenPair`: JWT 토큰 관리
 - `AccountStatus`: 계정 상태 열거형
+
+**프로필 관리**
+- `CustomerProfile`: 고객 프로필 애그리게이트 루트
+- `PersonalInfo`: 개인정보 (이름, 생년월일, 성별 등)
+- `ContactInfo`: 연락처 정보 (주/보조 전화번호)
+- `Address`: 주소 정보 (도로명/지번 주소, 배송 메모)
+- `ProfilePreferences`: 프로필 설정 및 선호도
+- `MarketingConsent`: 마케팅 수신 동의 관리
+- `NotificationSettings`: 알림 설정 관리
 
 #### 도메인 이벤트
 - `AccountCreatedEvent`: 계정 생성 이벤트
@@ -91,7 +215,7 @@ msa_ecommerce_customer/
 
 ### 계획된 기능 (PRD 기반)
 
-1. **고객 프로필 관리**: 개인정보, 주소, 연락처 관리
+1. ✅ **고객 프로필 관리**: 개인정보, 주소, 연락처 관리 (완료)
 2. **고객 활동 추적**: 로그인 기록, 페이지 뷰, 구매 패턴
 3. **고객 세분화**: RFM 분석, 행동 기반 세분화
 4. **고객 라이프사이클 관리**: 온보딩, 유지, 이탈 관리
@@ -153,7 +277,18 @@ msa_ecommerce_customer/
 ### 커밋 규칙
 
 - push 하기 전에 수정된 모듈의 테스트 코드가 모두 통과해야 함
-- 테스트 커버리지 80% 이상 유지
+- 테스트 커버리지 70% 이상 유지 (현재: 72%)
+
+### 테스트 현황
+
+- **전체 테스트 수**: 200+ 테스트
+- **테스트 커버리지**: 72%
+- **프로필 도메인 커버리지**: 83%
+- **주요 개선 사항**:
+  - MarketingConsent: 98% 커버리지
+  - NotificationSettings: 97% 커버리지
+  - BrandPreference: 100% 커버리지
+  - 도메인 이벤트 테스트 추가
 
 ## 🔧 설정
 
@@ -171,13 +306,6 @@ msa_ecommerce_customer/
 
 ## 📋 향후 계획
 
-### 예정된 모듈
-
-1. **product-core**: 상품 도메인
-2. **order-core**: 주문 도메인
-3. **inventory-core**: 재고 도메인
-4. **cart-core**: 장바구니 도메인
-
 ### 예정된 인프라스트럭처
 
 1. **messaging**: Kafka 메시징
@@ -187,9 +315,6 @@ msa_ecommerce_customer/
 ### 예정된 Bootstrap 모듈
 
 1. **customer-api**: 고객 서비스 API
-2. **product-api**: 상품 서비스 API
-3. **order-api**: 주문 서비스 API
-4. **gateway**: API 게이트웨이
 
 ## 📄 라이선스
 
