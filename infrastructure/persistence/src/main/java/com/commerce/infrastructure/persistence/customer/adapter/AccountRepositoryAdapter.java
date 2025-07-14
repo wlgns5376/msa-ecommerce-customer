@@ -5,6 +5,7 @@ import com.commerce.customer.core.domain.repository.AccountRepository;
 import com.commerce.infrastructure.persistence.customer.entity.AccountEntity;
 import com.commerce.infrastructure.persistence.customer.mapper.AccountMapper;
 import com.commerce.infrastructure.persistence.customer.repository.AccountJpaRepository;
+import com.commerce.infrastructure.persistence.customer.repository.AccountQueryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
@@ -15,6 +16,7 @@ import java.util.Optional;
 public class AccountRepositoryAdapter implements AccountRepository {
 
     private final AccountJpaRepository accountJpaRepository;
+    private final AccountQueryRepository accountQueryRepository;
     private final AccountMapper accountMapper;
 
     @Override
@@ -26,30 +28,30 @@ public class AccountRepositoryAdapter implements AccountRepository {
 
     @Override
     public Optional<Account> findById(AccountId accountId) {
-        return accountJpaRepository.findById(accountId.getValue())
+        return accountQueryRepository.findById(accountId.getValue())
                 .map(accountMapper::toDomain);
     }
 
     @Override
     public Optional<Account> findByEmail(Email email) {
-        return accountJpaRepository.findByEmail(email.getValue())
+        return accountQueryRepository.findByEmail(email.getValue())
                 .map(accountMapper::toDomain);
     }
 
     @Override
     public Optional<Account> findByCustomerId(CustomerId customerId) {
-        return accountJpaRepository.findByCustomerId(customerId.getValue())
+        return accountQueryRepository.findByCustomerId(customerId.getValue())
                 .map(accountMapper::toDomain);
     }
 
     @Override
     public boolean existsByEmail(Email email) {
-        return accountJpaRepository.existsByEmail(email.getValue());
+        return accountQueryRepository.existsByEmail(email.getValue());
     }
 
     @Override
     public boolean existsByCustomerId(CustomerId customerId) {
-        return accountJpaRepository.existsByCustomerId(customerId.getValue());
+        return accountQueryRepository.existsByCustomerId(customerId.getValue());
     }
 
     @Override
@@ -68,13 +70,13 @@ public class AccountRepositoryAdapter implements AccountRepository {
 
     @Override
     public Optional<Account> findActiveByEmail(Email email) {
-        return accountJpaRepository.findActiveAccountByEmail(email.getValue())
+        return accountQueryRepository.findActiveAccountByEmail(email.getValue())
                 .map(accountMapper::toDomain);
     }
 
     @Override
     public Optional<Account> findActiveByCustomerId(CustomerId customerId) {
-        return accountJpaRepository.findActiveAccountByCustomerId(customerId.getValue())
+        return accountQueryRepository.findActiveAccountByCustomerId(customerId.getValue())
                 .map(accountMapper::toDomain);
     }
 }
