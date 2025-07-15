@@ -27,7 +27,7 @@ class JwtTokenServiceImplTest {
     void setUp() {
         jwtTokenService = new JwtTokenServiceImpl();
         customerId = CustomerId.generate();
-        accountId = AccountId.generate();
+        accountId = AccountId.of(123L);
         email = Email.of("test@example.com");
     }
 

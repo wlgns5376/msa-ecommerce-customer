@@ -2,24 +2,12 @@ package com.commerce.infrastructure.persistence.customer.repository;
 
 import com.commerce.infrastructure.persistence.customer.entity.AccountEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 
-import java.util.Optional;
-
+/**
+ * Account JPA Repository
+ * 복잡한 쿼리는 AccountQueryRepository(QueryDSL)을 사용
+ */
 public interface AccountJpaRepository extends JpaRepository<AccountEntity, Long> {
-
-    Optional<AccountEntity> findByEmail(String email);
-
-    Optional<AccountEntity> findByCustomerId(Long customerId);
-
-    boolean existsByEmail(String email);
-
-    boolean existsByCustomerId(Long customerId);
-
-    @Query("SELECT a FROM AccountEntity a WHERE a.email = :email AND a.status = 'ACTIVE'")
-    Optional<AccountEntity> findActiveAccountByEmail(@Param("email") String email);
-
-    @Query("SELECT a FROM AccountEntity a WHERE a.customerId = :customerId AND a.status = 'ACTIVE'")
-    Optional<AccountEntity> findActiveAccountByCustomerId(@Param("customerId") Long customerId);
+    // 기본 JPA 메서드만 사용
+    // 복잡한 조건이 있는 쿼리는 AccountQueryRepository에서 처리
 }

@@ -171,6 +171,14 @@ src/test/java/
 - 도메인 모델 구조도 추가
 - 프로젝트 구조 상세화
 
+## GitHub 작업 설정
+- **GitHub App 사용**: 모든 GitHub 관련 작업은 GitHub App 인증으로 수행
+- **환경변수 설정 필요**:
+  - `GITHUB_APP_ID`: GitHub App ID
+  - `GITHUB_APP_INSTALLATION_ID`: GitHub App Installation ID  
+  - `GITHUB_APP_PRIVATE_KEY_PATH`: GitHub App Private Key 파일 경로
+- **GitHub CLI**: `gh` 명령어로 PR, Issue, Review 등 모든 GitHub 작업 처리
+
 ## 개발 팁
 - 새 모듈 추가 시 settings.gradle에 include 추가
 - 각 core 모듈은 독립적으로 테스트 가능하도록 설계

@@ -35,13 +35,14 @@ public class Account {
     }
 
     public static Account create(CustomerId customerId, Email email, Password password) {
-        AccountId accountId = AccountId.generate();
+        // ID는 persistence 계층에서 할당받도록 null로 생성
+        AccountId accountId = AccountId.newInstance();
         LocalDateTime now = LocalDateTime.now();
         
         Account account = new Account(accountId, customerId, email, password, 
                                     AccountStatus.PENDING, now);
         
-        // 도메인 이벤트 발행 (구현 예정)
+        // 도메인 이벤트 발행은 ID 할당 후에 수행 (persistence 계층에서)
         // account.addDomainEvent(new AccountCreatedEvent(accountId, customerId, email));
         
         return account;
@@ -57,6 +58,22 @@ public class Account {
         account.updatedAt = updatedAt;
         account.lastLoginAt = lastLoginAt;
         return account;
+    }
+
+    /**
+     * Persistence 계층에서 새로 할당된 ID로 도메인 객체를 재생성
+     * (새로 생성된 Account의 ID 할당용)
+     */
+    public Account withAssignedId(AccountId assignedId) {
+        if (this.accountId.isAssigned()) {
+            throw new IllegalStateException("이미 ID가 할당된 계정입니다.");
+        }
+        if (!assignedId.isAssigned()) {
+            throw new IllegalArgumentException("할당할 ID가 유효하지 않습니다.");
+        }
+        
+        return Account.restore(assignedId, this.customerId, this.email, this.password, 
+                             this.status, this.createdAt, this.updatedAt, this.lastLoginAt);
     }
 
     public void activate() {

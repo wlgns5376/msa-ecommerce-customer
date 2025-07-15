@@ -117,6 +117,15 @@ class AccountMapperTest {
                 .password("ValidPass123!")
                 .status(AccountEntity.AccountStatus.PENDING)
                 .build();
+        
+        // 리플렉션으로 accountId 설정
+        try {
+            java.lang.reflect.Field accountIdField = pendingEntity.getClass().getDeclaredField("accountId");
+            accountIdField.setAccessible(true);
+            accountIdField.set(pendingEntity, 1L);
+        } catch (Exception e) {
+            // 테스트 환경에서만 사용되므로 예외 무시
+        }
 
         Account pendingAccount = accountMapper.toDomain(pendingEntity);
         assertThat(pendingAccount.getStatus()).isEqualTo(AccountStatus.PENDING);
@@ -128,6 +137,15 @@ class AccountMapperTest {
                 .password("ValidPass123!")
                 .status(AccountEntity.AccountStatus.ACTIVE)
                 .build();
+        
+        // 리플렉션으로 accountId 설정
+        try {
+            java.lang.reflect.Field accountIdField = activeEntity.getClass().getDeclaredField("accountId");
+            accountIdField.setAccessible(true);
+            accountIdField.set(activeEntity, 2L);
+        } catch (Exception e) {
+            // 테스트 환경에서만 사용되므로 예외 무시
+        }
 
         Account activeAccount = accountMapper.toDomain(activeEntity);
         assertThat(activeAccount.getStatus()).isEqualTo(AccountStatus.ACTIVE);
@@ -139,6 +157,15 @@ class AccountMapperTest {
                 .password("ValidPass123!")
                 .status(AccountEntity.AccountStatus.SUSPENDED)
                 .build();
+        
+        // 리플렉션으로 accountId 설정
+        try {
+            java.lang.reflect.Field accountIdField = suspendedEntity.getClass().getDeclaredField("accountId");
+            accountIdField.setAccessible(true);
+            accountIdField.set(suspendedEntity, 3L);
+        } catch (Exception e) {
+            // 테스트 환경에서만 사용되므로 예외 무시
+        }
 
         Account suspendedAccount = accountMapper.toDomain(suspendedEntity);
         assertThat(suspendedAccount.getStatus()).isEqualTo(AccountStatus.SUSPENDED);
@@ -179,6 +206,15 @@ class AccountMapperTest {
                 .status(AccountEntity.AccountStatus.PENDING)
                 .lastLoginAt(null)
                 .build();
+        
+        // 리플렉션으로 accountId 설정
+        try {
+            java.lang.reflect.Field accountIdField = entityWithNullDates.getClass().getDeclaredField("accountId");
+            accountIdField.setAccessible(true);
+            accountIdField.set(entityWithNullDates, 100L);
+        } catch (Exception e) {
+            // 테스트 환경에서만 사용되므로 예외 무시
+        }
 
         // When
         Account result = accountMapper.toDomain(entityWithNullDates);
@@ -201,6 +237,16 @@ class AccountMapperTest {
 
         // When - 도메인 -> 엔티티 -> 도메인
         AccountEntity entity = accountMapper.toEntity(originalAccount);
+        
+        // 리플렉션으로 accountId 설정 (실제 저장 시 DB에서 할당되는 ID 시뮬레이션)
+        try {
+            java.lang.reflect.Field accountIdField = entity.getClass().getDeclaredField("accountId");
+            accountIdField.setAccessible(true);
+            accountIdField.set(entity, 500L);
+        } catch (Exception e) {
+            // 테스트 환경에서만 사용되므로 예외 무시
+        }
+        
         Account roundTripAccount = accountMapper.toDomain(entity);
 
         // Then - ID는 다를 수 있으므로(엔티티 저장 시 새로 생성됨) 다른 필드들만 검증

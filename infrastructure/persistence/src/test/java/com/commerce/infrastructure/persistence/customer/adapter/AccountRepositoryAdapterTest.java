@@ -4,6 +4,7 @@ import com.commerce.customer.core.domain.model.*;
 import com.commerce.infrastructure.persistence.customer.entity.AccountEntity;
 import com.commerce.infrastructure.persistence.customer.mapper.AccountMapper;
 import com.commerce.infrastructure.persistence.customer.repository.AccountJpaRepository;
+import com.commerce.infrastructure.persistence.customer.repository.AccountQueryRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -22,6 +23,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.never;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("AccountRepositoryAdapter 테스트")
@@ -29,6 +31,9 @@ class AccountRepositoryAdapterTest {
 
     @Mock
     private AccountJpaRepository accountJpaRepository;
+
+    @Mock
+    private AccountQueryRepository accountQueryRepository;
 
     @Mock
     private AccountMapper accountMapper;
@@ -103,7 +108,7 @@ class AccountRepositoryAdapterTest {
     @DisplayName("ID로 계정을 성공적으로 조회한다")
     void findById_Success() {
         // Given
-        given(accountJpaRepository.findById(1L)).willReturn(Optional.of(testAccountEntity));
+        given(accountQueryRepository.findById(1L)).willReturn(Optional.of(testAccountEntity));
         given(accountMapper.toDomain(testAccountEntity)).willReturn(testAccount);
 
         // When
@@ -114,7 +119,7 @@ class AccountRepositoryAdapterTest {
         assertThat(result.get().getAccountId()).isEqualTo(accountId);
         assertThat(result.get().getStatus()).isEqualTo(AccountStatus.ACTIVE);
         
-        then(accountJpaRepository).should(times(1)).findById(1L);
+        then(accountQueryRepository).should(times(1)).findById(1L);
         then(accountMapper).should(times(1)).toDomain(testAccountEntity);
     }
 
@@ -122,7 +127,7 @@ class AccountRepositoryAdapterTest {
     @DisplayName("존재하지 않는 ID로 계정을 조회하면 빈 Optional을 반환한다")
     void findById_NotFound() {
         // Given
-        given(accountJpaRepository.findById(1L)).willReturn(Optional.empty());
+        given(accountQueryRepository.findById(1L)).willReturn(Optional.empty());
 
         // When
         Optional<Account> result = accountRepositoryAdapter.findById(accountId);
@@ -130,7 +135,7 @@ class AccountRepositoryAdapterTest {
         // Then
         assertThat(result).isEmpty();
         
-        then(accountJpaRepository).should(times(1)).findById(1L);
+        then(accountQueryRepository).should(times(1)).findById(1L);
         then(accountMapper).should(times(0)).toDomain(any());
     }
 
@@ -138,7 +143,7 @@ class AccountRepositoryAdapterTest {
     @DisplayName("이메일로 계정을 성공적으로 조회한다")
     void findByEmail_Success() {
         // Given
-        given(accountJpaRepository.findByEmail("test@example.com")).willReturn(Optional.of(testAccountEntity));
+        given(accountQueryRepository.findByEmail("test@example.com")).willReturn(Optional.of(testAccountEntity));
         given(accountMapper.toDomain(testAccountEntity)).willReturn(testAccount);
 
         // When
@@ -148,7 +153,7 @@ class AccountRepositoryAdapterTest {
         assertThat(result).isPresent();
         assertThat(result.get().getEmail()).isEqualTo(email);
         
-        then(accountJpaRepository).should(times(1)).findByEmail("test@example.com");
+        then(accountQueryRepository).should(times(1)).findByEmail("test@example.com");
         then(accountMapper).should(times(1)).toDomain(testAccountEntity);
     }
 
@@ -156,7 +161,7 @@ class AccountRepositoryAdapterTest {
     @DisplayName("고객 ID로 계정을 성공적으로 조회한다")
     void findByCustomerId_Success() {
         // Given
-        given(accountJpaRepository.findByCustomerId(1L)).willReturn(Optional.of(testAccountEntity));
+        given(accountQueryRepository.findByCustomerId(1L)).willReturn(Optional.of(testAccountEntity));
         given(accountMapper.toDomain(testAccountEntity)).willReturn(testAccount);
 
         // When
@@ -166,7 +171,7 @@ class AccountRepositoryAdapterTest {
         assertThat(result).isPresent();
         assertThat(result.get().getCustomerId()).isEqualTo(customerId);
         
-        then(accountJpaRepository).should(times(1)).findByCustomerId(1L);
+        then(accountQueryRepository).should(times(1)).findByCustomerId(1L);
         then(accountMapper).should(times(1)).toDomain(testAccountEntity);
     }
 
@@ -174,7 +179,7 @@ class AccountRepositoryAdapterTest {
     @DisplayName("이메일 존재 여부를 확인한다")
     void existsByEmail_Success() {
         // Given
-        given(accountJpaRepository.existsByEmail("test@example.com")).willReturn(true);
+        given(accountQueryRepository.existsByEmail("test@example.com")).willReturn(true);
 
         // When
         boolean result = accountRepositoryAdapter.existsByEmail(email);
@@ -182,14 +187,14 @@ class AccountRepositoryAdapterTest {
         // Then
         assertThat(result).isTrue();
         
-        then(accountJpaRepository).should(times(1)).existsByEmail("test@example.com");
+        then(accountQueryRepository).should(times(1)).existsByEmail("test@example.com");
     }
 
     @Test
     @DisplayName("고객 ID 존재 여부를 확인한다")
     void existsByCustomerId_Success() {
         // Given
-        given(accountJpaRepository.existsByCustomerId(1L)).willReturn(true);
+        given(accountQueryRepository.existsByCustomerId(1L)).willReturn(true);
 
         // When
         boolean result = accountRepositoryAdapter.existsByCustomerId(customerId);
@@ -197,14 +202,14 @@ class AccountRepositoryAdapterTest {
         // Then
         assertThat(result).isTrue();
         
-        then(accountJpaRepository).should(times(1)).existsByCustomerId(1L);
+        then(accountQueryRepository).should(times(1)).existsByCustomerId(1L);
     }
 
     @Test
     @DisplayName("활성 계정을 이메일로 조회한다")
     void findActiveByEmail_Success() {
         // Given
-        given(accountJpaRepository.findActiveAccountByEmail("test@example.com"))
+        given(accountQueryRepository.findActiveAccountByEmail("test@example.com"))
                 .willReturn(Optional.of(testAccountEntity));
         given(accountMapper.toDomain(testAccountEntity)).willReturn(testAccount);
 
@@ -215,7 +220,7 @@ class AccountRepositoryAdapterTest {
         assertThat(result).isPresent();
         assertThat(result.get().getStatus()).isEqualTo(AccountStatus.ACTIVE);
         
-        then(accountJpaRepository).should(times(1)).findActiveAccountByEmail("test@example.com");
+        then(accountQueryRepository).should(times(1)).findActiveAccountByEmail("test@example.com");
         then(accountMapper).should(times(1)).toDomain(testAccountEntity);
     }
 
@@ -223,7 +228,7 @@ class AccountRepositoryAdapterTest {
     @DisplayName("활성 계정을 고객 ID로 조회한다")
     void findActiveByCustomerId_Success() {
         // Given
-        given(accountJpaRepository.findActiveAccountByCustomerId(1L))
+        given(accountQueryRepository.findActiveAccountByCustomerId(1L))
                 .willReturn(Optional.of(testAccountEntity));
         given(accountMapper.toDomain(testAccountEntity)).willReturn(testAccount);
 
@@ -234,17 +239,24 @@ class AccountRepositoryAdapterTest {
         assertThat(result).isPresent();
         assertThat(result.get().getStatus()).isEqualTo(AccountStatus.ACTIVE);
         
-        then(accountJpaRepository).should(times(1)).findActiveAccountByCustomerId(1L);
+        then(accountQueryRepository).should(times(1)).findActiveAccountByCustomerId(1L);
         then(accountMapper).should(times(1)).toDomain(testAccountEntity);
     }
 
     @Test
     @DisplayName("계정을 성공적으로 삭제한다")
     void delete_Success() {
+        // Given
+        given(accountJpaRepository.findById(1L)).willReturn(Optional.of(testAccountEntity));
+        given(accountJpaRepository.save(testAccountEntity)).willReturn(testAccountEntity);
+
         // When
         accountRepositoryAdapter.delete(testAccount);
 
         // Then
-        then(accountJpaRepository).should(times(1)).deleteById(1L);
+        then(accountJpaRepository).should(times(1)).findById(1L);
+        then(accountJpaRepository).should(times(1)).save(testAccountEntity);
+        // 물리적 삭제 대신 soft delete 확인
+        then(accountJpaRepository).should(never()).deleteById(anyLong());
     }
 }

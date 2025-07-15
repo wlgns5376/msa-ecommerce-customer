@@ -17,7 +17,7 @@ class AccountCreatedEventTest {
     @DisplayName("유효한 정보로 AccountCreatedEvent를 생성할 수 있다")
     void createAccountCreatedEventWithValidInfo() {
         // Given
-        AccountId accountId = AccountId.generate();
+        AccountId accountId = AccountId.of(123L);
         CustomerId customerId = CustomerId.generate();
         Email email = Email.of("test@example.com");
         LocalDateTime before = LocalDateTime.now();
@@ -38,7 +38,7 @@ class AccountCreatedEventTest {
     @DisplayName("이벤트 생성 시 발생 시간이 자동으로 설정된다")
     void occurredAtIsSetAutomatically() {
         // Given
-        AccountId accountId = AccountId.generate();
+        AccountId accountId = AccountId.of(123L);
         CustomerId customerId = CustomerId.generate();
         Email email = Email.of("test@example.com");
 
@@ -54,11 +54,11 @@ class AccountCreatedEventTest {
     @DisplayName("여러 이벤트를 생성할 때 각각 다른 발생 시간을 가진다")
     void multipleEventsHaveDifferentOccurredTimes() throws InterruptedException {
         // Given
-        AccountId accountId1 = AccountId.generate();
+        AccountId accountId1 = AccountId.of(123L);
         CustomerId customerId1 = CustomerId.generate();
         Email email1 = Email.of("test1@example.com");
 
-        AccountId accountId2 = AccountId.generate();
+        AccountId accountId2 = AccountId.of(124L);
         CustomerId customerId2 = CustomerId.generate();
         Email email2 = Email.of("test2@example.com");
 
@@ -75,7 +75,7 @@ class AccountCreatedEventTest {
     @DisplayName("같은 정보로 생성된 이벤트라도 발생 시간이 다르면 다른 객체이다")
     void eventsWithSameDataButDifferentTimeAreNotEqual() throws InterruptedException {
         // Given
-        AccountId accountId = AccountId.generate();
+        AccountId accountId = AccountId.of(123L);
         CustomerId customerId = CustomerId.generate();
         Email email = Email.of("test@example.com");
 

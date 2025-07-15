@@ -11,9 +11,10 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "accounts", indexes = {
-    @Index(name = "idx_account_email", columnList = "email", unique = true),
-    @Index(name = "idx_account_customer_id", columnList = "customer_id", unique = true),
-    @Index(name = "idx_account_status", columnList = "status")
+    @Index(name = "idx_account_email", columnList = "email, deleted", unique = true),
+    @Index(name = "idx_account_customer_id", columnList = "customer_id, deleted", unique = true),
+    @Index(name = "idx_account_status", columnList = "status"),
+    @Index(name = "idx_account_deleted", columnList = "deleted")
 })
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -43,6 +44,12 @@ public class AccountEntity extends BaseEntity {
     @Column(name = "last_login_at")
     private LocalDateTime lastLoginAt;
 
+    @Column(name = "deleted", nullable = false)
+    private Boolean deleted = false;
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
     @Builder
     public AccountEntity(Long customerId, String email, String password, 
                         AccountStatus status, LocalDateTime activatedAt, 
@@ -68,6 +75,31 @@ public class AccountEntity extends BaseEntity {
 
     public void updatePassword(String password) {
         this.password = password;
+    }
+
+    /**
+     * 논리적 삭제 (Soft Delete) 수행
+     */
+    public void markAsDeleted() {
+        this.deleted = true;
+        this.deletedAt = LocalDateTime.now();
+        this.status = AccountStatus.DELETED;
+    }
+
+    /**
+     * 논리적 삭제 복원
+     */
+    public void restore() {
+        this.deleted = false;
+        this.deletedAt = null;
+        // 상태는 비즈니스 로직에 따라 결정되므로 여기서는 변경하지 않음
+    }
+
+    /**
+     * 삭제 여부 확인
+     */
+    public boolean isDeleted() {
+        return Boolean.TRUE.equals(this.deleted);
     }
 
     public enum AccountStatus {
