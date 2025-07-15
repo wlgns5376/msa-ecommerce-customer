@@ -15,7 +15,11 @@ project(':persistence').projectDir = file('infrastructure/persistence')
 // include 'infrastructure:external'
 // include 'infrastructure:cache'
 
-// Bootstrap modules (향후 추가 예정)
+// Bootstrap modules
+include 'customer-api'
+project(':customer-api').projectDir = file('bootstrap/customer-api')
+
+// 향후 추가 예정
 // include 'bootstrap:product-api'
 // include 'bootstrap:cart-api'
 // include 'bootstrap:order-api'
