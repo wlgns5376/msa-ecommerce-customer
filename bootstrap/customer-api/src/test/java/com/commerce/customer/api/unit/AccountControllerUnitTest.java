@@ -12,6 +12,7 @@ import com.commerce.customer.core.domain.model.Account;
 import com.commerce.customer.core.domain.model.AccountId;
 import com.commerce.customer.core.domain.model.CustomerId;
 import com.commerce.customer.core.domain.model.Email;
+import com.commerce.customer.core.domain.model.jwt.JwtClaims;
 import com.commerce.customer.core.domain.model.jwt.JwtToken;
 import com.commerce.customer.core.domain.model.jwt.JwtTokenType;
 import com.commerce.customer.core.domain.model.jwt.TokenPair;
@@ -129,10 +130,16 @@ class AccountControllerUnitTest {
     @DisplayName("계정 정보 조회 성공")
     void getMyAccount_Success() {
         // given
+        JwtClaims jwtClaims = JwtClaims.create(
+            CustomerId.of(1L),
+            accountId,
+            Email.of("test@example.com"),
+            "issuer",
+            "audience",
+            JwtTokenType.ACCESS
+        );
+        given(request.getAttribute("jwtClaims")).willReturn(jwtClaims);
         given(accountApplicationService.getAccount(any())).willReturn(account);
-
-        // when
-        given(request.getHeader("Authorization")).willReturn("Bearer accessToken");
 
         // when
         ResponseEntity<?> response = accountController.getMyAccount(request);

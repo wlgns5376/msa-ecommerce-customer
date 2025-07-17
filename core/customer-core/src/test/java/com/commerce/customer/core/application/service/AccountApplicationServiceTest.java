@@ -10,6 +10,7 @@ import com.commerce.customer.core.domain.model.jwt.JwtTokenType;
 import com.commerce.customer.core.domain.model.jwt.TokenPair;
 import com.commerce.customer.core.domain.repository.AccountRepository;
 import com.commerce.customer.core.domain.service.AccountDomainService;
+import com.commerce.customer.core.domain.service.PasswordEncoder;
 import com.commerce.customer.core.domain.service.jwt.JwtTokenService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -18,7 +19,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -69,7 +69,8 @@ class AccountApplicationServiceTest {
     @DisplayName("계정 생성 성공")
     void createAccount_Success() {
         // given
-        given(accountDomainService.createAccount(any(CustomerId.class), any(Email.class), any(Password.class), any(AccountDomainService.PasswordEncoder.class)))
+        given(accountRepository.generateCustomerId()).willReturn(customerId);
+        given(accountDomainService.createAccount(any(CustomerId.class), any(Email.class), any(Password.class), any(PasswordEncoder.class)))
                 .willReturn(account);
         given(account.getAccountId()).willReturn(accountId);
 
@@ -78,7 +79,8 @@ class AccountApplicationServiceTest {
 
         // then
         assertThat(result).isEqualTo(accountId);
-        then(accountDomainService).should().createAccount(any(CustomerId.class), any(Email.class), any(Password.class), any(AccountDomainService.PasswordEncoder.class));
+        then(accountRepository).should().generateCustomerId();
+        then(accountDomainService).should().createAccount(any(CustomerId.class), any(Email.class), any(Password.class), any(PasswordEncoder.class));
     }
 
     @Test
@@ -88,7 +90,7 @@ class AccountApplicationServiceTest {
         AccountDomainService.LoginResult loginResult = AccountDomainService.LoginResult.success(accountId, customerId);
         TokenPair tokenPair = createTokenPair();
         
-        given(accountDomainService.attemptLogin(any(Email.class), any(Password.class), any(AccountDomainService.PasswordEncoder.class)))
+        given(accountDomainService.attemptLogin(any(Email.class), any(Password.class), any(PasswordEncoder.class)))
                 .willReturn(loginResult);
         given(jwtTokenService.generateTokenPair(any(CustomerId.class), any(AccountId.class), any(Email.class)))
                 .willReturn(tokenPair);
@@ -98,7 +100,7 @@ class AccountApplicationServiceTest {
 
         // then
         assertThat(result).isEqualTo(tokenPair);
-        then(accountDomainService).should().attemptLogin(any(Email.class), any(Password.class), any(AccountDomainService.PasswordEncoder.class));
+        then(accountDomainService).should().attemptLogin(any(Email.class), any(Password.class), any(PasswordEncoder.class));
         then(jwtTokenService).should().generateTokenPair(customerId, accountId, email);
     }
 
@@ -108,7 +110,7 @@ class AccountApplicationServiceTest {
         // given
         AccountDomainService.LoginResult loginResult = AccountDomainService.LoginResult.wrongPassword(accountId);
         
-        given(accountDomainService.attemptLogin(any(Email.class), any(Password.class), any(AccountDomainService.PasswordEncoder.class)))
+        given(accountDomainService.attemptLogin(any(Email.class), any(Password.class), any(PasswordEncoder.class)))
                 .willReturn(loginResult);
 
         // when & then
