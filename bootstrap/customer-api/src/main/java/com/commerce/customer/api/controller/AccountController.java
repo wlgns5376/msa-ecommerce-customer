@@ -11,6 +11,7 @@ import com.commerce.customer.core.domain.model.Account;
 import com.commerce.customer.core.domain.model.AccountId;
 import com.commerce.customer.core.domain.model.Email;
 import com.commerce.customer.core.domain.model.Password;
+import com.commerce.customer.core.domain.model.jwt.JwtClaims;
 import com.commerce.customer.core.domain.model.jwt.TokenPair;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -65,7 +66,7 @@ public class AccountController {
         LoginResponse response = new LoginResponse(
                 tokenPair.getAccessToken().getValue(),
                 tokenPair.getRefreshToken().getValue(),
-                extractAccountIdFromToken(tokenPair.getAccessToken().getValue()),
+                1L, // 임시 ID - 실제로는 JWT Claims에서 추출해야 함
                 email.getValue()
         );
         
@@ -103,21 +104,13 @@ public class AccountController {
     @Operation(summary = "계정 정보 조회", description = "현재 로그인된 계정의 정보를 조회합니다.")
     @GetMapping("/me")
     public ResponseEntity<Account> getMyAccount(HttpServletRequest request) {
-        String authHeader = request.getHeader("Authorization");
+        JwtClaims jwtClaims = (JwtClaims) request.getAttribute("jwtClaims");
         
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            String token = authHeader.substring(7);
-            Long accountId = extractAccountIdFromToken(token);
-            Account account = accountApplicationService.getAccount(AccountId.of(accountId));
+        if (jwtClaims != null) {
+            Account account = accountApplicationService.getAccount(jwtClaims.getAccountIdObject());
             return ResponseEntity.ok(account);
         }
         
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-    }
-    
-    private Long extractAccountIdFromToken(String token) {
-        // JWT 토큰에서 accountId를 추출하는 로직
-        // 실제 구현에서는 JwtTokenService를 사용해야 합니다.
-        return 1L; // 임시 구현
     }
 }

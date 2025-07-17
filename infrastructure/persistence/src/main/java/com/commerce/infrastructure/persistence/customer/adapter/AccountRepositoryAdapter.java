@@ -10,14 +10,22 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicLong;
 
 @Repository
 @RequiredArgsConstructor
 public class AccountRepositoryAdapter implements AccountRepository {
 
+    private static final AtomicLong CUSTOMER_ID_SEQUENCE = new AtomicLong(1);
+    
     private final AccountJpaRepository accountJpaRepository;
     private final AccountQueryRepository accountQueryRepository;
     private final AccountMapper accountMapper;
+    
+    @Override
+    public CustomerId generateCustomerId() {
+        return CustomerId.of(CUSTOMER_ID_SEQUENCE.getAndIncrement());
+    }
 
     @Override
     public Account save(Account account) {

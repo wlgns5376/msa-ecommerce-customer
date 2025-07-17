@@ -7,7 +7,8 @@ import java.util.concurrent.atomic.AtomicLong;
 
 @Getter
 public class CustomerId {
-    private static final AtomicLong SEQUENCE = new AtomicLong(1);
+    
+    private static final AtomicLong TEST_SEQUENCE = new AtomicLong(1);
     
     private final Long value;
 
@@ -18,12 +19,18 @@ public class CustomerId {
         this.value = value;
     }
 
-    public static CustomerId generate() {
-        return new CustomerId(SEQUENCE.getAndIncrement());
-    }
 
     public static CustomerId of(Long value) {
         return new CustomerId(value);
+    }
+    
+    /**
+     * 테스트용 ID 생성 메서드
+     * @deprecated 테스트에서만 사용해야 합니다. 실제 운영 환경에서는 Repository를 통해 생성해야 합니다.
+     */
+    @Deprecated
+    public static CustomerId generate() {
+        return new CustomerId(TEST_SEQUENCE.getAndIncrement());
     }
 
     @Override

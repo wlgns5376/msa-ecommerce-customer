@@ -10,6 +10,11 @@ import java.util.Optional;
 public interface AccountRepository {
     
     /**
+     * 새로운 고객 ID를 생성합니다.
+     */
+    CustomerId generateCustomerId();
+    
+    /**
      * 계정을 저장합니다.
      */
     Account save(Account account);

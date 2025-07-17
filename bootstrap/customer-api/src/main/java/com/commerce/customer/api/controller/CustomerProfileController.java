@@ -16,6 +16,7 @@ import com.commerce.customer.core.domain.model.profile.Gender;
 import com.commerce.customer.core.domain.model.profile.PersonalInfo;
 import com.commerce.customer.core.domain.model.profile.PhoneNumber;
 import com.commerce.customer.core.domain.model.profile.ProfileId;
+import com.commerce.customer.core.domain.model.jwt.JwtClaims;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -47,7 +48,12 @@ public class CustomerProfileController {
             @Valid @RequestBody CreateProfileRequest request,
             HttpServletRequest httpRequest) {
         
-        Long accountId = extractAccountIdFromToken(httpRequest);
+        JwtClaims jwtClaims = (JwtClaims) httpRequest.getAttribute("jwtClaims");
+        if (jwtClaims == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        
+        Long accountId = Long.valueOf(jwtClaims.getAccountId());
         
         FullName fullName = FullName.of(request.getFirstName(), request.getLastName());
         BirthDate birthDate = request.getBirthDate() != null ? BirthDate.of(request.getBirthDate()) : null;
@@ -72,7 +78,12 @@ public class CustomerProfileController {
     @Operation(summary = "프로필 조회", description = "현재 로그인된 계정의 프로필을 조회합니다.")
     @GetMapping("/me")
     public ResponseEntity<CustomerProfile> getMyProfile(HttpServletRequest request) {
-        Long accountId = extractAccountIdFromToken(request);
+        JwtClaims jwtClaims = (JwtClaims) request.getAttribute("jwtClaims");
+        if (jwtClaims == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        
+        Long accountId = Long.valueOf(jwtClaims.getAccountId());
         
         CustomerProfile profile = customerProfileApplicationService.getProfileByAccountId(AccountId.of(accountId));
         
@@ -137,18 +148,5 @@ public class CustomerProfileController {
         customerProfileApplicationService.updateAddress(ProfileId.of(profileId), address);
         
         return ResponseEntity.ok().build();
-    }
-    
-    private Long extractAccountIdFromToken(HttpServletRequest request) {
-        String authHeader = request.getHeader("Authorization");
-        
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            String token = authHeader.substring(7);
-            // JWT 토큰에서 accountId를 추출하는 로직
-            // 실제 구현에서는 JwtTokenService를 사용해야 합니다.
-            return 1L; // 임시 구현
-        }
-        
-        throw new IllegalArgumentException("인증 토큰이 없습니다.");
     }
 }

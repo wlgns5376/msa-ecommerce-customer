@@ -13,9 +13,9 @@ import com.commerce.customer.core.domain.model.jwt.JwtToken;
 import com.commerce.customer.core.domain.model.jwt.TokenPair;
 import com.commerce.customer.core.domain.repository.AccountRepository;
 import com.commerce.customer.core.domain.service.AccountDomainService;
+import com.commerce.customer.core.domain.service.PasswordEncoder;
 import com.commerce.customer.core.domain.service.jwt.JwtTokenService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,37 +31,15 @@ public class AccountApplicationService implements CreateAccountUseCase, LoginUse
     
     @Override
     public AccountId createAccount(Email email, Password password) {
-        CustomerId customerId = CustomerId.generate();
-        Account account = accountDomainService.createAccount(customerId, email, password, 
-                new AccountDomainService.PasswordEncoder() {
-                    @Override
-                    public String encode(String rawPassword) {
-                        return passwordEncoder.encode(rawPassword);
-                    }
-                    
-                    @Override
-                    public boolean matches(String rawPassword, String encodedPassword) {
-                        return passwordEncoder.matches(rawPassword, encodedPassword);
-                    }
-                });
+        CustomerId customerId = accountRepository.generateCustomerId();
+        Account account = accountDomainService.createAccount(customerId, email, password, passwordEncoder);
         
         return account.getAccountId();
     }
     
     @Override
     public TokenPair login(Email email, Password password) {
-        AccountDomainService.LoginResult loginResult = accountDomainService.attemptLogin(email, password,
-                new AccountDomainService.PasswordEncoder() {
-                    @Override
-                    public String encode(String rawPassword) {
-                        return passwordEncoder.encode(rawPassword);
-                    }
-                    
-                    @Override
-                    public boolean matches(String rawPassword, String encodedPassword) {
-                        return passwordEncoder.matches(rawPassword, encodedPassword);
-                    }
-                });
+        AccountDomainService.LoginResult loginResult = accountDomainService.attemptLogin(email, password, passwordEncoder);
         
         if (!loginResult.isSuccess()) {
             throw new IllegalArgumentException(loginResult.getFailureReason());
