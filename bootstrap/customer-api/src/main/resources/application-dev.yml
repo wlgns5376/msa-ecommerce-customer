@@ -22,6 +22,14 @@ spring:
   redis:
     host: localhost
     port: 6379
+    timeout: 2000ms
+    connect-timeout: 2000ms
+
+# 개발 환경에서 Redis health check 비활성화
+management:
+  health:
+    redis:
+      enabled: false
     
 logging:
   level:
