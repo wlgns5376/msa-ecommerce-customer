@@ -68,11 +68,320 @@
         ],
         "status": "done",
         "subtasks": []
+      },
+      {
+        "id": 6,
+        "title": "Implement Email/SMS Verification System",
+        "description": "Build comprehensive email verification system with OTP generation, token management, and password reset functionality",
+        "details": "Implement email verification using Spring Boot 3.2.0 best practices: 1) Add spring-boot-starter-mail dependency with version 3.2.0, 2) Create VerificationToken entity with expiration management using Redis for storage (TTL 5 minutes), 3) Implement OtpService with SecureRandom for token generation using alphanumeric characters, 4) Create EmailService with async email sending using @Async annotation, 5) Add verification endpoints for account activation and password reset, 6) Implement token validation with proper error handling for expired/invalid tokens, 7) Use Thymeleaf templates for email formatting, 8) Add rate limiting for verification requests to prevent abuse, 9) Store verification attempts in Redis with proper cleanup, 10) Add comprehensive validation for email formats and token integrity",
+        "testStrategy": "Unit tests for OtpService token generation and validation, integration tests for email sending with TestContainers, end-to-end tests for complete verification flow, mock email service for testing, verify token expiration handling, test rate limiting functionality",
+        "priority": "high",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Setup Email Service Dependencies and Configuration",
+            "description": "Add spring-boot-starter-mail dependency and configure email service properties for SMTP integration",
+            "dependencies": [],
+            "details": "Add spring-boot-starter-mail dependency version 3.2.0 to pom.xml, configure SMTP properties in application.yml including host, port, username, password, and SSL settings, set up email sender configuration with proper authentication and connection pooling",
+            "status": "pending",
+            "testStrategy": "Unit tests for email configuration validation, integration tests for SMTP connection, verify email service initialization and configuration loading"
+          },
+          {
+            "id": 2,
+            "title": "Create VerificationToken Entity and Redis Storage",
+            "description": "Implement VerificationToken entity with Redis storage for token management and expiration handling",
+            "dependencies": [
+              1
+            ],
+            "details": "Create VerificationToken entity with fields for token, email, type, creation timestamp, and expiration, implement Redis repository for token storage with TTL of 5 minutes, add token cleanup mechanism and proper serialization/deserialization",
+            "status": "pending",
+            "testStrategy": "Unit tests for token entity validation, Redis integration tests with TestContainers, verify token expiration and cleanup functionality, test serialization/deserialization"
+          },
+          {
+            "id": 3,
+            "title": "Implement OTP Service with Token Generation",
+            "description": "Create OtpService with secure random token generation and validation logic",
+            "dependencies": [
+              2
+            ],
+            "details": "Implement OtpService with SecureRandom for generating alphanumeric tokens, add token validation methods with proper error handling, implement rate limiting for token generation to prevent abuse, create token verification with proper security checks",
+            "status": "pending",
+            "testStrategy": "Unit tests for token generation randomness and uniqueness, validation logic testing, rate limiting verification, security testing for token patterns"
+          },
+          {
+            "id": 4,
+            "title": "Create Async Email Service with Thymeleaf Templates",
+            "description": "Implement EmailService with asynchronous email sending and Thymeleaf template support",
+            "dependencies": [
+              3
+            ],
+            "details": "Create EmailService with @Async annotation for non-blocking email sending, implement Thymeleaf templates for email formatting (account activation, password reset), add email queue management with retry mechanism, implement email delivery status tracking",
+            "status": "pending",
+            "testStrategy": "Unit tests for email service methods, async processing verification, template rendering tests, mock email server testing, delivery status tracking validation"
+          },
+          {
+            "id": 5,
+            "title": "Implement Verification Endpoints and API Integration",
+            "description": "Create REST endpoints for account activation and password reset with comprehensive validation",
+            "dependencies": [
+              4
+            ],
+            "details": "Implement verification endpoints for account activation and password reset, add comprehensive validation for email formats and token integrity, create API documentation with OpenAPI 3.0, implement proper error handling and response codes, add endpoint security and input sanitization",
+            "status": "pending",
+            "testStrategy": "Integration tests for verification endpoints, API validation testing, security testing for input sanitization, end-to-end verification flow testing, error handling validation"
+          }
+        ]
+      },
+      {
+        "id": 7,
+        "title": "Implement Kafka Event-Driven Infrastructure",
+        "description": "Build robust Kafka event system for domain events with proper serialization, error handling, and monitoring",
+        "details": "Implement event-driven architecture using Spring Kafka 3.0.12: 1) Add spring-kafka dependency and configure KafkaTemplate with proper serialization, 2) Create DomainEventPublisher interface and implementation with async publishing, 3) Implement CloudEvents specification for event standardization, 4) Add event schemas for AccountCreated, AccountActivated, LoginSuccessful, ProfileUpdated events, 5) Configure Kafka topics with proper partitioning strategy, 6) Implement transactional outbox pattern for reliable event publishing, 7) Add event versioning support with schema registry integration, 8) Create dead letter queue handling for failed events, 9) Implement event correlation IDs for tracing, 10) Add monitoring with Micrometer metrics for event publishing success/failure rates, 11) Configure proper retry mechanisms with exponential backoff, 12) Add idempotency handling to prevent duplicate event processing",
+        "testStrategy": "Unit tests for event publishers and serialization, integration tests with embedded Kafka using TestContainers, verify event ordering and partition assignment, test failure scenarios and dead letter queue handling, validate event schema compatibility",
+        "priority": "high",
+        "dependencies": [
+          6
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Configure Kafka Infrastructure and Dependencies",
+            "description": "Set up Kafka infrastructure with Spring Kafka 3.0.12 dependency, configure KafkaTemplate with proper serialization, and establish basic Kafka topic configuration",
+            "dependencies": [],
+            "details": "Add spring-kafka dependency version 3.0.12 to pom.xml, configure KafkaTemplate with JSON serialization/deserialization, set up bootstrap servers configuration, create initial topic configuration with proper partitioning strategy for customer events, configure producer and consumer properties including acks, retries, and timeout settings",
+            "status": "pending",
+            "testStrategy": "Unit tests for Kafka configuration, integration tests with embedded Kafka using TestContainers, verify producer/consumer connectivity and serialization/deserialization functionality"
+          },
+          {
+            "id": 2,
+            "title": "Implement Domain Event Publisher Interface and Core Events",
+            "description": "Create DomainEventPublisher interface with async implementation and define core domain events following CloudEvents specification",
+            "dependencies": [
+              1
+            ],
+            "details": "Create DomainEventPublisher interface with async publishing methods, implement KafkaDomainEventPublisher with @Async annotation, define event schemas for AccountCreated, AccountActivated, LoginSuccessful, and ProfileUpdated events using CloudEvents specification, add event correlation IDs for tracing, implement event versioning support",
+            "status": "pending",
+            "testStrategy": "Unit tests for event publisher implementation, mock Kafka template testing, validate event schema structure and CloudEvents compliance, test async publishing behavior and correlation ID generation"
+          },
+          {
+            "id": 3,
+            "title": "Implement Transactional Outbox Pattern",
+            "description": "Build transactional outbox pattern for reliable event publishing with database transaction coordination",
+            "dependencies": [
+              2
+            ],
+            "details": "Create OutboxEvent entity for storing events in database, implement OutboxEventRepository with JPA, create OutboxEventProcessor for publishing events from outbox table, configure transactional event publishing with @Transactional annotation, implement cleanup mechanism for processed events, add retry logic for failed event publishing",
+            "status": "pending",
+            "testStrategy": "Integration tests for transactional event publishing, verify database transaction rollback scenarios, test outbox event processing and cleanup, validate event ordering and delivery guarantees"
+          },
+          {
+            "id": 4,
+            "title": "Implement Error Handling and Dead Letter Queue",
+            "description": "Set up comprehensive error handling with dead letter queue processing and retry mechanisms",
+            "dependencies": [
+              3
+            ],
+            "details": "Configure dead letter queue (DLQ) for failed events, implement exponential backoff retry mechanism with configurable max attempts, create error handling for serialization/deserialization failures, add idempotency handling to prevent duplicate event processing, implement DLQ message processing and manual retry capabilities",
+            "status": "pending",
+            "testStrategy": "Test failure scenarios and DLQ routing, validate retry mechanisms with different failure types, test idempotency handling with duplicate events, verify exponential backoff behavior and max retry limits"
+          },
+          {
+            "id": 5,
+            "title": "Add Monitoring and Metrics Integration",
+            "description": "Implement comprehensive monitoring with Micrometer metrics for event publishing success/failure rates and performance tracking",
+            "dependencies": [
+              4
+            ],
+            "details": "Integrate Micrometer for Kafka metrics collection, create custom metrics for event publishing success/failure rates, implement performance monitoring for event processing latency, add health checks for Kafka connectivity, configure alerting for DLQ threshold breaches, create dashboards for event system monitoring, add logging with structured format for event lifecycle tracking",
+            "status": "pending",
+            "testStrategy": "Validate metrics collection accuracy, test health check endpoints, verify alerting thresholds, integration tests for monitoring components, performance testing with metrics validation, dashboard functionality testing"
+          }
+        ]
+      },
+      {
+        "id": 8,
+        "title": "Enhance Security with Rate Limiting and Advanced Protection",
+        "description": "Implement comprehensive security measures including rate limiting, account lockout, and enhanced JWT security",
+        "details": "Implement advanced security features: 1) Add spring-boot-starter-data-redis-reactive for rate limiting with Redis, 2) Create RateLimitingFilter using Redis for distributed rate limiting with sliding window algorithm, 3) Implement account lockout mechanism with configurable attempts (5 attempts, 15-minute lockout), 4) Enhance JWT security with rotating secrets and shorter expiration times (15 minutes for access tokens), 5) Add password policy validation with minimum complexity requirements, 6) Implement CSRF protection with proper token validation, 7) Add request validation with comprehensive input sanitization, 8) Create security event logging for audit trails, 9) Implement IP-based blocking for suspicious activities, 10) Add brute force protection with progressive delays, 11) Configure CORS properly for production environments, 12) Add security headers (HSTS, CSP, X-Frame-Options) using Spring Security",
+        "testStrategy": "Unit tests for rate limiting logic and account lockout, integration tests for JWT security enhancements, security penetration testing for rate limiting bypass attempts, test password policy validation, verify CSRF protection effectiveness",
+        "priority": "high",
+        "dependencies": [
+          6
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 9,
+        "title": "Build Comprehensive Integration Test Suite",
+        "description": "Create extensive integration test coverage for all API endpoints, authentication flows, and event processing",
+        "details": "Implement comprehensive integration testing: 1) Use TestContainers for PostgreSQL, Redis, and Kafka in integration tests, 2) Create @SpringBootTest configurations for full application context testing, 3) Implement authentication flow integration tests covering registration, login, logout, and token refresh, 4) Add API endpoint integration tests with proper security context, 5) Create event processing integration tests with Kafka test harness, 6) Implement database transaction testing with rollback scenarios, 7) Add performance testing with JMeter or similar tools, 8) Create end-to-end user journey tests, 9) Add contract testing with Spring Cloud Contract, 10) Implement chaos engineering tests for resilience, 11) Add security integration tests for authentication and authorization, 12) Target 85% code coverage with quality metrics using JaCoCo, 13) Create test data fixtures and factories for consistent test setup",
+        "testStrategy": "Integration test suite covering all major user flows, automated test execution in CI/CD pipeline, performance benchmarking tests, security vulnerability scanning, database integrity tests, event processing validation tests",
+        "priority": "high",
+        "dependencies": [
+          6,
+          7,
+          8
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 10,
+        "title": "Implement OAuth2 Social Login Integration",
+        "description": "Add social login support for Google, Naver, and Kakao with proper account linking and session management",
+        "details": "Implement OAuth2 social login using Spring Security OAuth2 Client: 1) Add spring-boot-starter-oauth2-client dependency version 3.2.0, 2) Configure OAuth2 providers for Google, Naver, and Kakao in application.yml, 3) Create SocialLoginService with provider-specific implementations, 4) Implement account linking/unlinking functionality with existing accounts, 5) Add social profile synchronization with user consent, 6) Create unified session management across social and local authentication, 7) Implement OAuth2AuthenticationSuccessHandler for post-login processing, 8) Add social account information storage with privacy compliance, 9) Create provider-specific user info extraction with OAuth2UserInfoFactory, 10) Implement social login security with state parameter validation, 11) Add social account disconnection with proper cleanup, 12) Configure proper redirect URIs for production and development environments",
+        "testStrategy": "Mock OAuth2 provider testing, integration tests for social login flow, account linking validation tests, session management testing, security testing for OAuth2 flow, user data synchronization tests",
+        "priority": "medium",
+        "dependencies": [
+          6,
+          8
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 11,
+        "title": "Implement Redis Caching and Performance Optimization",
+        "description": "Add distributed caching layer with Redis for customer data and session management with performance optimization",
+        "details": "Implement Redis caching for performance optimization: 1) Configure Redis cluster setup with spring-boot-starter-data-redis version 3.2.0, 2) Create RedisCacheConfiguration with proper TTL settings (user profiles: 1 hour, session data: 30 minutes), 3) Implement @Cacheable annotations for customer profile queries, 4) Add cache-aside pattern for frequently accessed data, 5) Create distributed session management with Redis, 6) Implement cache warming strategies for critical data, 7) Add cache invalidation mechanisms with event-driven updates, 8) Configure Redis connection pooling with Lettuce for optimal performance, 9) Implement cache metrics monitoring with Micrometer, 10) Add cache eviction policies and memory management, 11) Create cache serialization optimization with efficient data structures, 12) Implement read-through and write-through cache patterns for data consistency",
+        "testStrategy": "Cache hit/miss ratio testing, performance benchmarking with and without cache, cache invalidation testing, distributed cache consistency tests, Redis failover testing, memory usage optimization validation",
+        "priority": "medium",
+        "dependencies": [
+          6,
+          8
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 12,
+        "title": "Build Monitoring and Observability System",
+        "description": "Implement comprehensive monitoring, logging, and alerting system with metrics collection and health checks",
+        "details": "Implement production-ready monitoring: 1) Configure Micrometer with Prometheus metrics collection, 2) Add structured logging with Logback and JSON format, 3) Implement distributed tracing with Spring Cloud Sleuth and Zipkin, 4) Create custom metrics for business KPIs (login success rate, registration rate), 5) Add health check endpoints with detailed system status, 6) Implement alerting rules for critical system events, 7) Create application performance monitoring dashboard, 8) Add error tracking with proper exception handling and logging, 9) Implement log aggregation with ELK stack compatibility, 10) Create system resource monitoring (CPU, memory, disk usage), 11) Add database performance monitoring with connection pool metrics, 12) Implement security audit logging for compliance requirements",
+        "testStrategy": "Metrics collection validation, health check endpoint testing, log format and structure validation, alert trigger testing, dashboard functionality verification, performance monitoring accuracy tests",
+        "priority": "medium",
+        "dependencies": [
+          7,
+          9
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 13,
+        "title": "Optimize Database Performance and Queries",
+        "description": "Implement database optimization strategies including indexing, query optimization, and connection pooling",
+        "details": "Implement database performance optimization: 1) Add database indexes for frequently queried columns (email, account status, profile ID), 2) Optimize JPA queries with custom QueryDSL implementations, 3) Configure HikariCP connection pool for optimal performance (max pool size: 20, connection timeout: 30s), 4) Implement read/write database splitting for improved scalability, 5) Add query execution time monitoring with JPA statistics, 6) Optimize entity relationships with proper fetch strategies, 7) Implement database migration scripts with Flyway for schema changes, 8) Add database connection health checks, 9) Optimize bulk operations with batch processing, 10) Create database performance testing with load simulation, 11) Implement database query caching at JPA level, 12) Add slow query detection and logging for performance monitoring",
+        "testStrategy": "Database performance benchmarking, query execution time measurement, connection pool efficiency testing, index effectiveness validation, bulk operation performance tests, database migration testing",
+        "priority": "medium",
+        "dependencies": [
+          9,
+          11
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 14,
+        "title": "Implement Customer Analytics and Behavior Tracking",
+        "description": "Build customer analytics system with activity tracking, segmentation, and real-time dashboard capabilities",
+        "details": "Implement customer analytics system: 1) Create customer activity tracking with event-driven data collection, 2) Implement RFM (Recency, Frequency, Monetary) analysis for customer segmentation, 3) Add customer behavior pattern analysis with machine learning integration, 4) Create real-time customer dashboard with WebSocket support, 5) Implement customer lifetime value calculation, 6) Add customer journey mapping with touchpoint tracking, 7) Create customer cohort analysis for retention insights, 8) Implement predictive analytics for customer churn detection, 9) Add customer preference learning from interaction patterns, 10) Create customer segment-based personalization engine, 11) Implement A/B testing framework for customer experience optimization, 12) Add customer satisfaction scoring with feedback integration",
+        "testStrategy": "Analytics data accuracy validation, real-time dashboard performance testing, customer segmentation algorithm testing, behavior pattern recognition validation, dashboard visualization testing, performance impact assessment",
+        "priority": "low",
+        "dependencies": [
+          7,
+          12
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 15,
+        "title": "Implement Advanced Security Features",
+        "description": "Add two-factor authentication, session hijacking prevention, and advanced encryption mechanisms",
+        "details": "Implement advanced security features: 1) Add two-factor authentication (2FA) with TOTP support using Google Authenticator, 2) Implement session hijacking prevention with device fingerprinting, 3) Add CSRF token implementation with proper validation, 4) Create advanced encryption for sensitive data at rest using AES-256, 5) Implement security headers middleware with comprehensive protection, 6) Add API security with OAuth2 scopes and permissions, 7) Create security audit logging with tamper-proof storage, 8) Implement advanced password hashing with Argon2 algorithm, 9) Add security testing automation with OWASP ZAP integration, 10) Create security incident response automation, 11) Implement data masking for sensitive information in logs, 12) Add security compliance features for GDPR and data protection regulations",
+        "testStrategy": "2FA implementation testing, session security validation, CSRF protection testing, encryption/decryption validation, security header verification, penetration testing automation, compliance requirement verification",
+        "priority": "low",
+        "dependencies": [
+          8,
+          10
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 16,
+        "title": "Review and Implement PR Feedback",
+        "description": "Review comments from the latest pull request and implement the requested changes to improve code quality and address reviewer concerns",
+        "details": "Implement PR feedback resolution: 1) Review all comments from the latest pull request using GitHub's PR review interface, 2) Categorize feedback into code quality, architectural, security, and performance concerns, 3) Address code style and formatting issues identified by reviewers, 4) Implement suggested architectural improvements or refactoring recommendations, 5) Fix any security vulnerabilities or concerns raised in the review, 6) Optimize performance issues highlighted by reviewers, 7) Update documentation if changes affect API contracts or usage patterns, 8) Add or modify tests based on reviewer suggestions for better coverage, 9) Ensure all automated checks pass after implementing changes, 10) Respond to review comments with explanations of implemented changes, 11) Request re-review from original reviewers once all feedback is addressed",
+        "testStrategy": "Verify all automated CI/CD checks pass, validate that each review comment has been addressed with appropriate code changes, run full test suite to ensure no regressions, perform manual testing of modified functionality, confirm code quality metrics have improved, validate security scan results show no new vulnerabilities, check that documentation updates are accurate and complete",
+        "status": "in-progress",
+        "dependencies": [],
+        "priority": "high",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Review and Categorize PR Feedback",
+            "description": "Systematically review all comments from the latest pull request and categorize them into different types of feedback",
+            "dependencies": [],
+            "details": "Use GitHub's PR review interface to examine all review comments. Create a categorized list of feedback items grouped by: code quality issues, architectural concerns, security vulnerabilities, performance optimizations, documentation updates, and testing improvements. Document each feedback item with its priority level and implementation approach.",
+            "status": "pending",
+            "testStrategy": "Verify all PR comments have been reviewed and none are missed by cross-referencing with GitHub's review interface"
+          },
+          {
+            "id": 2,
+            "title": "Address Code Quality and Style Issues",
+            "description": "Fix code style, formatting, and quality issues identified by reviewers",
+            "dependencies": [
+              1
+            ],
+            "details": "Implement code style improvements such as proper variable naming, code formatting, removal of unused imports, refactoring of complex methods, and adherence to project coding standards. Use automated tools like linters and formatters where applicable to ensure consistency.",
+            "status": "pending",
+            "testStrategy": "Run code quality checks and linting tools to verify all style issues are resolved, ensure automated CI checks pass for code quality metrics"
+          },
+          {
+            "id": 3,
+            "title": "Implement Architectural and Performance Improvements",
+            "description": "Apply architectural refactoring and performance optimizations suggested by reviewers",
+            "dependencies": [
+              2
+            ],
+            "details": "Implement architectural improvements such as better separation of concerns, dependency injection patterns, and design pattern implementations. Address performance issues like query optimization, caching strategies, and resource management. Ensure changes align with overall system architecture.",
+            "status": "pending",
+            "testStrategy": "Performance testing to validate improvements, architecture compliance checks, verify system integration remains intact"
+          },
+          {
+            "id": 4,
+            "title": "Fix Security Issues and Update Documentation",
+            "description": "Address security vulnerabilities and update documentation based on reviewer feedback",
+            "dependencies": [
+              3
+            ],
+            "details": "Fix security vulnerabilities such as input validation, authentication issues, and data exposure risks. Update API documentation, README files, and inline code comments to reflect changes. Ensure all security best practices are followed and documented.",
+            "status": "pending",
+            "testStrategy": "Security scanning tools verification, documentation review for accuracy and completeness, validate API contracts match updated documentation"
+          },
+          {
+            "id": 5,
+            "title": "Update Tests and Finalize PR Response",
+            "description": "Add or modify tests based on reviewer suggestions and respond to all review comments",
+            "dependencies": [
+              4
+            ],
+            "details": "Implement additional test cases suggested by reviewers to improve coverage. Update existing tests that may be affected by code changes. Run full test suite to ensure no regressions. Respond to each review comment with explanations of implemented changes and request re-review from original reviewers.",
+            "status": "pending",
+            "testStrategy": "Full test suite execution to ensure no regressions, verify test coverage improvements, validate all automated CI/CD checks pass before requesting re-review"
+          }
+        ]
       }
     ],
     "metadata": {
       "created": "2025-07-12T02:33:12.025Z",
-      "updated": "2025-07-15T15:20:30.295Z",
+      "updated": "2025-07-18T11:30:56.752Z",
       "description": "Tasks for master context"
     }
   }
