@@ -6,6 +6,7 @@ import com.commerce.infrastructure.persistence.customer.adapter.AccountRepositor
 import com.commerce.infrastructure.persistence.customer.entity.AccountEntity;
 import com.commerce.infrastructure.persistence.customer.mapper.AccountMapper;
 import com.commerce.infrastructure.persistence.customer.repository.AccountJpaRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,18 +14,43 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.transaction.annotation.Transactional;
+import org.testcontainers.containers.MariaDBContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.testcontainers.utility.DockerImageName.parse;
 
 @DataJpaTest
-@ActiveProfiles("test")
+@ActiveProfiles("integration")
 @Import({AccountRepositoryAdapter.class, AccountMapper.class})
 @DisplayName("AccountRepository 통합 테스트")
-@org.junit.jupiter.api.Disabled("H2 데이터베이스 설정 문제로 임시 비활성화")
+@Testcontainers
 class AccountRepositoryIntegrationTest {
+
+    @Container
+    static final MariaDBContainer<?> mariaDB = new MariaDBContainer<>(parse("mariadb:11.1"))
+            .withDatabaseName("test")
+            .withUsername("test")
+            .withPassword("test")
+            .withReuse(true);
+
+    @DynamicPropertySource
+    static void configureProperties(DynamicPropertyRegistry registry) {
+        registry.add("spring.datasource.url", mariaDB::getJdbcUrl);
+        registry.add("spring.datasource.username", mariaDB::getUsername);
+        registry.add("spring.datasource.password", mariaDB::getPassword);
+        registry.add("spring.datasource.driver-class-name", mariaDB::getDriverClassName);
+        registry.add("spring.jpa.hibernate.ddl-auto", () -> "create-drop");
+        registry.add("spring.jpa.show-sql", () -> "true");
+        registry.add("spring.jpa.properties.hibernate.format_sql", () -> "true");
+        registry.add("spring.jpa.properties.hibernate.dialect", () -> "org.hibernate.dialect.MariaDBDialect");
+    }
 
     @Autowired
     private TestEntityManager entityManager;
@@ -34,6 +60,12 @@ class AccountRepositoryIntegrationTest {
 
     @Autowired
     private AccountRepository accountRepository;
+
+    @BeforeEach
+    void setUp() {
+        // TestContainers 시작 대기
+        mariaDB.isRunning();
+    }
 
     @Test
     @DisplayName("계정 저장 및 조회가 정상적으로 동작한다")

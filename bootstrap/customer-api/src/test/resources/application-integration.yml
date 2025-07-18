@@ -1,0 +1,60 @@
+spring:
+  profiles:
+    active: integration
+  application:
+    name: customer-api-integration-test
+  
+  datasource:
+    # TestContainers에서 동적으로 설정됨
+    url: jdbc:h2:mem:testdb
+    username: sa
+    password: ""
+    driver-class-name: org.h2.Driver
+  
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.H2Dialect
+  
+  flyway:
+    enabled: false # 통합테스트에서는 JPA로 스키마 생성
+  
+  redis:
+    host: localhost
+    port: 6379
+    password: 
+    database: 0
+    timeout: 2000ms
+    lettuce:
+      pool:
+        max-active: 8
+        max-idle: 8
+        min-idle: 0
+  
+  security:
+    jwt:
+      secret: test-secret-key-for-integration-test-that-is-long-enough
+      expiration: 3600000
+      refresh-expiration: 86400000
+
+logging:
+  level:
+    com.commerce.customer: DEBUG
+    org.springframework.web: DEBUG
+    org.springframework.security: DEBUG
+    org.testcontainers: INFO
+    com.github.dockerjava: WARN
+    org.springframework.test: DEBUG
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
