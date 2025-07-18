@@ -98,13 +98,6 @@ public class AccountDomainService {
         accountRepository.save(account);
     }
 
-    /**
-     * 비밀번호 인코더 인터페이스
-     */
-    public interface PasswordEncoder {
-        String encode(String rawPassword);
-        boolean matches(String rawPassword, String encodedPassword);
-    }
 
     /**
      * 로그인 결과

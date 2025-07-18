@@ -10,7 +10,19 @@ Customer Core 모듈은 커머스 시스템의 고객 관리 및 인증을 담�
 graph TB
     subgraph "Customer Core Module"
         subgraph "Application Layer"
-            UC[Use Cases]
+            subgraph "Services"
+                ACCOUNT_APP[AccountApplicationService]
+                PROFILE_APP[CustomerProfileApplicationService]
+            end
+            subgraph "Use Cases"
+                UC_CREATE[CreateAccountUseCase]
+                UC_LOGIN[LoginUseCase]
+                UC_LOGOUT[LogoutUseCase]
+                UC_REFRESH[RefreshTokenUseCase]
+                UC_PROFILE_CREATE[CreateCustomerProfileUseCase]
+                UC_PROFILE_GET[GetCustomerProfileUseCase]
+                UC_PROFILE_UPDATE[UpdateCustomerProfileUseCase]
+            end
         end
         
         subgraph "Domain Layer"
@@ -71,8 +83,17 @@ graph TB
     JwtTokenServiceImpl --> TokenPair
     JwtTokenServiceImpl -.-> Exceptions
     
-    UC --> AccountDomainService
-    UC --> JwtTokenService
+    ACCOUNT_APP --> UC_CREATE
+    ACCOUNT_APP --> UC_LOGIN
+    ACCOUNT_APP --> UC_LOGOUT
+    ACCOUNT_APP --> UC_REFRESH
+    PROFILE_APP --> UC_PROFILE_CREATE
+    PROFILE_APP --> UC_PROFILE_GET
+    PROFILE_APP --> UC_PROFILE_UPDATE
+    
+    ACCOUNT_APP --> AccountDomainService
+    ACCOUNT_APP --> JwtTokenService
+    PROFILE_APP --> CustomerProfileDomainService
 ```
 
 ## 도메인 모델 상세

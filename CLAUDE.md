@@ -177,6 +177,11 @@ src/test/java/
   - `GITHUB_APP_ID`: GitHub App ID
   - `GITHUB_APP_INSTALLATION_ID`: GitHub App Installation ID  
   - `GITHUB_APP_PRIVATE_KEY_PATH`: GitHub App Private Key 파일 경로
+- **GitHub CLI 로그인**:
+  ```bash
+  node .github/bin/generate_access_token.js > /tmp/access_token.txt
+  gh auth login --with-token < /tmp/access_token.txt
+  ```
 - **GitHub CLI**: `gh` 명령어로 PR, Issue, Review 등 모든 GitHub 작업 처리
 
 ## 개발 팁

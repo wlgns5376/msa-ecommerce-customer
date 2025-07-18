@@ -97,9 +97,9 @@ node_modules/
 *.sw?
 # OS specific
 
+.cursor
+.taskmaster/*.json
+
 # Task files
 # tasks.json
 # tasks/ 
-
-.cursor
-.taskmaster/*.json
