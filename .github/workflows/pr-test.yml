@@ -9,6 +9,7 @@ on:
       - 'build.gradle'
       - 'settings.gradle'
       - '.github/workflows/**'
+      - '.github/actions/**'
   push:
     branches: [ main, develop ]
     paths:
@@ -17,6 +18,7 @@ on:
       - 'build.gradle'
       - 'settings.gradle'
       - '.github/workflows/**'
+      - '.github/actions/**'
 
 env:
   GRADLE_OPTS: -Dorg.gradle.daemon=false -Dorg.gradle.workers.max=2
@@ -75,6 +77,36 @@ jobs:
       with:
         coverage-path: '**/build/reports/jacoco/test/jacocoTestReport.xml'
         min-coverage: '80'
+    
+    - name: 💬 Post PR Comment
+      uses: ./.github/actions/pr-comment-reporter
+      if: github.event_name == 'pull_request' && (success() || failure())
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        test-results-path: '**/build/test-results/test/TEST-*.xml'
+        coverage-path: '**/build/reports/jacoco/test/jacocoTestReport.xml'
+        min-coverage: '80'
+    
+    - name: 📊 JaCoCo Coverage Report
+      uses: madrapps/jacoco-report@v1.6.1
+      if: github.event_name == 'pull_request'
+      with:
+        paths: |
+          ${{ github.workspace }}/**/build/reports/jacoco/test/jacocoTestReport.xml
+        token: ${{ secrets.GITHUB_TOKEN }}
+        min-coverage-overall: 80
+        min-coverage-changed-files: 80
+        title: 'Code Coverage Report'
+        update-comment: true
+    
+    - name: 🧪 Publish Test Results
+      uses: EnricoMi/publish-unit-test-result-action@v2
+      if: github.event_name == 'pull_request' && (success() || failure())
+      with:
+        files: '**/build/test-results/test/TEST-*.xml'
+        check_name: 'Test Results'
+        comment_title: '🧪 Test Results'
+        comment_mode: update last
     
     - name: 🚀 Upload test artifacts
       uses: actions/upload-artifact@v4
