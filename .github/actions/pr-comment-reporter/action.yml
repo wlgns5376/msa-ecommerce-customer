@@ -44,6 +44,7 @@ runs:
       with:
         github-token: ${{ inputs.github-token }}
         script: |
+          try {
           const tag = '${{ inputs.comment-tag }}';
           const minCoverage = parseInt('${{ inputs.min-coverage }}');
           
@@ -128,4 +129,10 @@ runs:
               issue_number: context.issue.number,
               body: body
             });
+          }
+          } catch (error) {
+            console.error('Error posting PR comment:', error);
+            console.error('Error details:', error.message);
+            // Don't fail the workflow if comment posting fails
+            core.warning(`Failed to post PR comment: ${error.message}`);
           }
