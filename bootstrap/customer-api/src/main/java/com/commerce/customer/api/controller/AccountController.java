@@ -6,7 +6,10 @@ import com.commerce.customer.api.dto.account.LoginRequest;
 import com.commerce.customer.api.dto.account.LoginResponse;
 import com.commerce.customer.api.dto.account.RefreshTokenRequest;
 import com.commerce.customer.api.dto.account.RefreshTokenResponse;
+import com.commerce.customer.api.dto.account.ActivateAccountRequest;
+import com.commerce.customer.api.dto.account.ActivateAccountResponse;
 import com.commerce.customer.core.application.service.AccountApplicationService;
+import com.commerce.customer.core.application.usecase.account.ActivateAccountUseCase;
 import com.commerce.customer.core.domain.model.Account;
 import com.commerce.customer.core.domain.model.AccountId;
 import com.commerce.customer.core.domain.model.Email;
@@ -26,6 +29,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.PathVariable;
 
 @Tag(name = "계정 관리", description = "계정 생성, 로그인, 로그아웃, 토큰 갱신")
 @RestController
@@ -112,5 +116,19 @@ public class AccountController {
         }
         
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    }
+    
+    @Operation(summary = "계정 활성화", description = "이메일로 받은 인증 코드를 사용하여 계정을 활성화합니다.")
+    @PostMapping("/{accountId}/activate")
+    public ResponseEntity<ActivateAccountResponse> activateAccount(
+            @PathVariable Long accountId,
+            @Valid @RequestBody ActivateAccountRequest request) {
+        
+        AccountId id = AccountId.of(accountId);
+        ActivateAccountUseCase useCase = new ActivateAccountUseCase(id, request.getActivationCode());
+        
+        accountApplicationService.activateAccount(useCase);
+        
+        return ResponseEntity.ok(ActivateAccountResponse.success());
     }
 }

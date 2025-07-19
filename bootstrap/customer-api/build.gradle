@@ -25,6 +25,7 @@ dependencies {
     // 내부 모듈 의존성
     implementation project(':customer-core')
     implementation project(':persistence')
+    implementation project(':kafka')
     implementation project(':common')
 
     // Spring Boot Web
