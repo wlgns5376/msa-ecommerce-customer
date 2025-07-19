@@ -10,8 +10,10 @@ project(':customer-core').projectDir = file('core/customer-core')
 include 'persistence'
 project(':persistence').projectDir = file('infrastructure/persistence')
 
+include 'kafka'
+project(':kafka').projectDir = file('infrastructure/kafka')
+
 // 향후 추가 예정
-// include 'infrastructure:messaging'
 // include 'infrastructure:external'
 // include 'infrastructure:cache'
 

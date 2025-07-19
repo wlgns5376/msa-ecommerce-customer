@@ -1,5 +1,7 @@
 package com.commerce.customer.core.domain.model;
 
+import com.commerce.customer.core.domain.event.AccountActivatedEvent;
+import com.commerce.customer.core.domain.event.AccountCreatedEvent;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
@@ -19,6 +21,7 @@ public class Account {
     private LocalDateTime lastLoginAt;
     private int loginFailCount;
     private LocalDateTime lockedUntil;
+    private ActivationCode activationCode;
 
     private final List<Object> domainEvents = new ArrayList<>();
 
@@ -42,8 +45,11 @@ public class Account {
         Account account = new Account(accountId, customerId, email, password, 
                                     AccountStatus.PENDING, now);
         
+        // 계정 활성화를 위한 인증 코드 생성
+        account.activationCode = ActivationCode.generate();
+        
         // 도메인 이벤트 발행은 ID 할당 후에 수행 (persistence 계층에서)
-        // account.addDomainEvent(new AccountCreatedEvent(accountId, customerId, email));
+        // account.addDomainEvent(new AccountCreatedEvent(accountId, customerId, email, account.activationCode.getCode()));
         
         return account;
     }
@@ -53,10 +59,12 @@ public class Account {
      */
     public static Account restore(AccountId accountId, CustomerId customerId, Email email, 
                                 Password password, AccountStatus status, LocalDateTime createdAt,
-                                LocalDateTime updatedAt, LocalDateTime lastLoginAt) {
+                                LocalDateTime updatedAt, LocalDateTime lastLoginAt, 
+                                ActivationCode activationCode) {
         Account account = new Account(accountId, customerId, email, password, status, createdAt);
         account.updatedAt = updatedAt;
         account.lastLoginAt = lastLoginAt;
+        account.activationCode = activationCode;
         return account;
     }
 
@@ -73,19 +81,33 @@ public class Account {
         }
         
         return Account.restore(assignedId, this.customerId, this.email, this.password, 
-                             this.status, this.createdAt, this.updatedAt, this.lastLoginAt);
+                             this.status, this.createdAt, this.updatedAt, this.lastLoginAt, 
+                             this.activationCode);
     }
 
-    public void activate() {
+    public void activate(String inputCode) {
         if (!status.canActivate()) {
             throw new IllegalStateException("현재 상태에서는 활성화할 수 없습니다: " + status);
         }
         
+        if (activationCode == null) {
+            throw new IllegalStateException("인증 코드가 생성되지 않았습니다.");
+        }
+        
+        if (activationCode.isExpired()) {
+            throw new IllegalStateException("인증 코드가 만료되었습니다.");
+        }
+        
+        if (!activationCode.matches(inputCode)) {
+            throw new IllegalArgumentException("잘못된 인증 코드입니다.");
+        }
+        
         this.status = AccountStatus.ACTIVE;
         this.updatedAt = LocalDateTime.now();
+        this.activationCode = null; // 사용된 인증 코드는 제거
         
-        // 도메인 이벤트 발행 (구현 예정)
-        // addDomainEvent(new AccountActivatedEvent(accountId, customerId));
+        // 도메인 이벤트 발행
+        raiseAccountActivatedEvent();
     }
 
     public void deactivate() {
@@ -166,5 +188,23 @@ public class Account {
     @Override
     public int hashCode() {
         return Objects.hash(accountId);
+    }
+    
+    public void raiseAccountCreatedEvent() {
+        if (activationCode != null) {
+            domainEvents.add(new AccountCreatedEvent(accountId, customerId, email, activationCode.getCode()));
+        }
+    }
+    
+    public void raiseAccountActivatedEvent() {
+        domainEvents.add(new AccountActivatedEvent(accountId, customerId));
+    }
+    
+    public List<Object> getDomainEvents() {
+        return new ArrayList<>(domainEvents);
+    }
+    
+    public void clearDomainEvents() {
+        domainEvents.clear();
     }
 }

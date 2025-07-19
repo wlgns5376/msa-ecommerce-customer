@@ -89,13 +89,13 @@ public class AccountDomainService {
 
     /**
      * 계정을 활성화합니다.
+     * @deprecated 활성화는 이제 AccountApplicationService에서 인증 코드와 함께 처리됩니다.
      */
+    @Deprecated
     public void activateAccount(AccountId accountId) {
-        Account account = accountRepository.findById(accountId)
-            .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 계정입니다: " + accountId.getValue()));
-        
-        account.activate();
-        accountRepository.save(account);
+        // 이 메서드는 더 이상 사용되지 않습니다.
+        // 계정 활성화는 이제 인증 코드를 통해 AccountApplicationService에서 처리됩니다.
+        throw new UnsupportedOperationException("계정 활성화는 인증 코드를 통해 수행되어야 합니다.");
     }
 
 

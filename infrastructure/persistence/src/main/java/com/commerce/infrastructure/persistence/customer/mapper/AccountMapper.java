@@ -13,13 +13,20 @@ public class AccountMapper {
         }
 
         // ID가 할당되지 않은 새로운 Account의 경우 accountId를 설정하지 않음 (DB에서 auto-increment)
-        return AccountEntity.builder()
+        AccountEntity.AccountEntityBuilder builder = AccountEntity.builder()
                 .customerId(account.getCustomerId().getValue())
                 .email(account.getEmail().getValue())
                 .password(account.getPassword().getValue())
                 .status(mapToEntityStatus(account.getStatus()))
-                .lastLoginAt(account.getLastLoginAt())
-                .build();
+                .lastLoginAt(account.getLastLoginAt());
+        
+        // 인증 코드 설정
+        if (account.getActivationCode() != null) {
+            builder.activationCode(account.getActivationCode().getCode())
+                   .activationCodeExpiresAt(account.getActivationCode().getExpiresAt());
+        }
+        
+        return builder.build();
     }
 
     public Account toDomain(AccountEntity entity) {
@@ -32,6 +39,12 @@ public class AccountMapper {
             throw new IllegalStateException("Entity의 accountId가 null입니다. DB 조회 결과가 올바르지 않습니다.");
         }
 
+        // 인증 코드 복원
+        ActivationCode activationCode = null;
+        if (entity.getActivationCode() != null && entity.getActivationCodeExpiresAt() != null) {
+            activationCode = ActivationCode.of(entity.getActivationCode(), entity.getActivationCodeExpiresAt());
+        }
+        
         return Account.restore(
                 AccountId.of(entity.getAccountId()),
                 CustomerId.of(entity.getCustomerId()),
@@ -40,7 +53,8 @@ public class AccountMapper {
                 mapToDomainStatus(entity.getStatus()),
                 entity.getCreatedAt() != null ? entity.getCreatedAt() : java.time.LocalDateTime.now(),
                 entity.getUpdatedAt() != null ? entity.getUpdatedAt() : java.time.LocalDateTime.now(),
-                entity.getLastLoginAt()
+                entity.getLastLoginAt(),
+                activationCode
         );
     }
 

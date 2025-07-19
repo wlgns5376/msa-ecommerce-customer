@@ -50,22 +50,33 @@ public class AccountEntity extends BaseEntity {
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
+    @Column(name = "activation_code", length = 32)
+    private String activationCode;
+
+    @Column(name = "activation_code_expires_at")
+    private LocalDateTime activationCodeExpiresAt;
+
     @Builder
     public AccountEntity(Long customerId, String email, String password, 
                         AccountStatus status, LocalDateTime activatedAt, 
-                        LocalDateTime lastLoginAt) {
+                        LocalDateTime lastLoginAt, String activationCode,
+                        LocalDateTime activationCodeExpiresAt) {
         this.customerId = customerId;
         this.email = email;
         this.password = password;
         this.status = status;
         this.activatedAt = activatedAt;
         this.lastLoginAt = lastLoginAt;
+        this.activationCode = activationCode;
+        this.activationCodeExpiresAt = activationCodeExpiresAt;
     }
 
     public void updateStatus(AccountStatus status) {
         this.status = status;
         if (status == AccountStatus.ACTIVE && this.activatedAt == null) {
             this.activatedAt = LocalDateTime.now();
+            this.activationCode = null;
+            this.activationCodeExpiresAt = null;
         }
     }
 
