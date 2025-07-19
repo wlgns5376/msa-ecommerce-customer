@@ -20,6 +20,12 @@ on:
       - '.github/workflows/**'
       - '.github/actions/**'
 
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+  checks: write
+
 env:
   GRADLE_OPTS: -Dorg.gradle.daemon=false -Dorg.gradle.workers.max=2
   JAVA_VERSION: '17'
