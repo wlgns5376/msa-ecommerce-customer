@@ -1,0 +1,153 @@
+name: 'PR Test & Coverage Comment'
+description: 'Comment test results and coverage on PR'
+inputs:
+  test-results-path:
+    description: 'Path pattern for test result files'
+    required: false
+    default: '**/build/test-results/test/TEST-*.xml'
+  coverage-path:
+    description: 'Path pattern for coverage report files'
+    required: false
+    default: '**/build/reports/jacoco/test/jacocoTestReport.xml'
+  min-coverage:
+    description: 'Minimum coverage percentage required'
+    required: false
+    default: '80'
+  github-token:
+    description: 'GitHub token for commenting'
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Parse test and coverage data
+      id: parse
+      shell: bash
+      run: |
+        # Parse test results
+        TOTAL_TESTS=0
+        TOTAL_FAILURES=0
+        TOTAL_ERRORS=0
+        PASSED_TESTS=0
+        
+        for file in $(find . -path "${{ inputs.test-results-path }}" -type f); do
+          if [ -f "$file" ]; then
+            TESTS=$(grep -o 'tests="[0-9]*"' "$file" | grep -o '[0-9]*' | head -1 || echo "0")
+            FAILURES=$(grep -o 'failures="[0-9]*"' "$file" | grep -o '[0-9]*' | head -1 || echo "0")
+            ERRORS=$(grep -o 'errors="[0-9]*"' "$file" | grep -o '[0-9]*' | head -1 || echo "0")
+            
+            TOTAL_TESTS=$((TOTAL_TESTS + TESTS))
+            TOTAL_FAILURES=$((TOTAL_FAILURES + FAILURES))
+            TOTAL_ERRORS=$((TOTAL_ERRORS + ERRORS))
+          fi
+        done
+        
+        PASSED_TESTS=$((TOTAL_TESTS - TOTAL_FAILURES - TOTAL_ERRORS))
+        
+        # Parse coverage
+        TOTAL_COVERED=0
+        TOTAL_MISSED=0
+        
+        for file in $(find . -path "${{ inputs.coverage-path }}" -type f); do
+          if [ -f "$file" ]; then
+            INSTRUCTION_COVERED=$(grep -o '<counter type="INSTRUCTION"[^>]*covered="[0-9]*"' "$file" | grep -o 'covered="[0-9]*"' | grep -o '[0-9]*' | tail -1 || echo "0")
+            INSTRUCTION_MISSED=$(grep -o '<counter type="INSTRUCTION"[^>]*missed="[0-9]*"' "$file" | grep -o 'missed="[0-9]*"' | grep -o '[0-9]*' | tail -1 || echo "0")
+            
+            TOTAL_COVERED=$((TOTAL_COVERED + INSTRUCTION_COVERED))
+            TOTAL_MISSED=$((TOTAL_MISSED + INSTRUCTION_MISSED))
+          fi
+        done
+        
+        if [ $((TOTAL_COVERED + TOTAL_MISSED)) -gt 0 ]; then
+          OVERALL_COVERAGE=$(((TOTAL_COVERED * 100) / (TOTAL_COVERED + TOTAL_MISSED)))
+        else
+          OVERALL_COVERAGE=0
+        fi
+        
+        # Set outputs
+        echo "total-tests=$TOTAL_TESTS" >> $GITHUB_OUTPUT
+        echo "passed-tests=$PASSED_TESTS" >> $GITHUB_OUTPUT
+        echo "failed-tests=$TOTAL_FAILURES" >> $GITHUB_OUTPUT
+        echo "error-tests=$TOTAL_ERRORS" >> $GITHUB_OUTPUT
+        echo "overall-coverage=$OVERALL_COVERAGE" >> $GITHUB_OUTPUT
+        
+        # Generate comment body
+        {
+          echo "comment-body<<EOF"
+          echo "<!-- test-coverage-report -->"
+          echo "## 📊 Test Results & Coverage Report"
+          echo ""
+          echo "### ✅ Tests"
+          echo ""
+          echo "| Status | Count |"
+          echo "|--------|-------|"
+          echo "| **Total** | $TOTAL_TESTS |"
+          echo "| ✅ **Passed** | $PASSED_TESTS |"
+          
+          if [ $TOTAL_FAILURES -gt 0 ]; then
+            echo "| ❌ **Failed** | $TOTAL_FAILURES |"
+          fi
+          
+          if [ $TOTAL_ERRORS -gt 0 ]; then
+            echo "| 🚫 **Errors** | $TOTAL_ERRORS |"
+          fi
+          
+          echo ""
+          
+          if [ $OVERALL_COVERAGE -ge ${{ inputs.min-coverage }} ]; then
+            echo "### ✅ Coverage"
+            echo ""
+            echo "| Metric | Value |"
+            echo "|--------|-------|"
+            echo "| **Overall Coverage** | ✅ ${OVERALL_COVERAGE}% |"
+            echo "| **Required** | ${{ inputs.min-coverage }}% |"
+            echo "| **Status** | ✅ Passed |"
+          else
+            echo "### ❌ Coverage"
+            echo ""
+            echo "| Metric | Value |"
+            echo "|--------|-------|"
+            echo "| **Overall Coverage** | ❌ ${OVERALL_COVERAGE}% |"
+            echo "| **Required** | ${{ inputs.min-coverage }}% |"
+            echo "| **Status** | ❌ Failed |"
+          fi
+          
+          echo ""
+          echo "### 📝 Summary"
+          echo ""
+          
+          if [ $((TOTAL_FAILURES + TOTAL_ERRORS)) -eq 0 ] && [ $OVERALL_COVERAGE -ge ${{ inputs.min-coverage }} ]; then
+            echo "✅ **All tests passed and coverage requirements met!**"
+          else
+            if [ $((TOTAL_FAILURES + TOTAL_ERRORS)) -gt 0 ]; then
+              echo "❌ **Tests failed!** Please fix the failing tests."
+            fi
+            if [ $OVERALL_COVERAGE -lt ${{ inputs.min-coverage }} ]; then
+              echo "❌ **Coverage too low!** Current coverage (${OVERALL_COVERAGE}%) is below the minimum requirement (${{ inputs.min-coverage }}%)."
+            fi
+          fi
+          
+          echo ""
+          echo "---"
+          echo "*Generated by PR Test & Coverage workflow* • [View Details](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})"
+          echo ""
+          echo "EOF"
+        } >> $GITHUB_OUTPUT
+    
+    - name: Find existing comment
+      uses: peter-evans/find-comment@v3
+      id: find-comment
+      with:
+        issue-number: ${{ github.event.pull_request.number }}
+        comment-author: 'github-actions[bot]'
+        body-includes: '<!-- test-coverage-report -->'
+        token: ${{ inputs.github-token }}
+    
+    - name: Create or update comment
+      uses: peter-evans/create-or-update-comment@v4
+      with:
+        comment-id: ${{ steps.find-comment.outputs.comment-id }}
+        issue-number: ${{ github.event.pull_request.number }}
+        body: ${{ steps.parse.outputs.comment-body }}
+        edit-mode: replace
+        token: ${{ inputs.github-token }}

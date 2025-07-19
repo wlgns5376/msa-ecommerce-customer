@@ -20,6 +20,12 @@ on:
       - '.github/workflows/**'
       - '.github/actions/**'
 
+permissions:
+  contents: read
+  pull-requests: write
+  checks: write
+  issues: write
+
 env:
   GRADLE_OPTS: -Dorg.gradle.daemon=false -Dorg.gradle.workers.max=2
   JAVA_VERSION: '17'
@@ -220,3 +226,49 @@ jobs:
         echo "- **Commit**: \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
         echo "- **Run Number**: #${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
         echo "- **Triggered by**: ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+
+  pr-comment:
+    name: 💬 PR Comment
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.event_name == 'pull_request'
+    
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+    
+    - name: ☕ Set up JDK ${{ env.JAVA_VERSION }}
+      uses: actions/setup-java@v4
+      with:
+        java-version: ${{ env.JAVA_VERSION }}
+        distribution: 'temurin'
+        cache: 'gradle'
+    
+    - name: 🔧 Grant execute permission for gradlew
+      run: chmod +x ./gradlew
+    
+    - name: 🧪 Run tests with coverage
+      run: ./gradlew test jacocoTestReport
+      continue-on-error: true
+    
+    - name: 💬 Post test results and coverage to PR
+      uses: ./.github/actions/pr-comment
+      with:
+        test-results-path: '**/build/test-results/test/TEST-*.xml'
+        coverage-path: '**/build/reports/jacoco/test/jacocoTestReport.xml'
+        min-coverage: '80'
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: 📝 Add detailed coverage report
+      uses: madrapps/jacoco-report@v1.6.1
+      if: always()
+      with:
+        paths: |
+          ${{ github.workspace }}/**/build/reports/jacoco/test/jacocoTestReport.xml
+        token: ${{ secrets.GITHUB_TOKEN }}
+        min-coverage-overall: 80
+        min-coverage-changed-files: 80
+        title: Code Coverage Report
+        update-comment: true
+        pass-emoji: ':white_check_mark:'
+        fail-emoji: ':x:'
