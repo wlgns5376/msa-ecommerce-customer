@@ -7,7 +7,8 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 @SpringBootApplication(scanBasePackages = {
     "com.commerce.customer.core",
     "com.commerce.customer.api",
-    "com.commerce.infrastructure.persistence"
+    "com.commerce.infrastructure.persistence",
+    "com.commerce.infrastructure.kafka"
 })
 @EnableDiscoveryClient
 public class CustomerApiApplication {
