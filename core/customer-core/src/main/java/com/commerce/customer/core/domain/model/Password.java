@@ -24,16 +24,21 @@ public class Password {
         
         this.value = value;
     }
+    
+    // 암호화된 비밀번호를 위한 생성자 (유효성 검증 없음)
+    private Password(String encodedValue, boolean encoded) {
+        if (encodedValue == null || encodedValue.trim().isEmpty()) {
+            throw new IllegalArgumentException("암호화된 비밀번호는 필수값입니다.");
+        }
+        this.value = encodedValue;
+    }
 
     public static Password of(String value) {
         return new Password(value);
     }
 
     public static Password ofEncoded(String encodedValue) {
-        if (encodedValue == null || encodedValue.trim().isEmpty()) {
-            throw new IllegalArgumentException("암호화된 비밀번호는 필수값입니다.");
-        }
-        return new Password(encodedValue);
+        return new Password(encodedValue, true);
     }
 
     @Override
