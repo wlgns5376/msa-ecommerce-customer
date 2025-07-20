@@ -30,12 +30,6 @@ env:
   GRADLE_OPTS: -Dorg.gradle.daemon=false -Dorg.gradle.workers.max=2
   JAVA_VERSION: '17'
 
-permissions:
-  contents: read
-  pull-requests: write
-  checks: write
-  issues: write
-
 jobs:
   test:
     name: 🏗️ Build & Test
