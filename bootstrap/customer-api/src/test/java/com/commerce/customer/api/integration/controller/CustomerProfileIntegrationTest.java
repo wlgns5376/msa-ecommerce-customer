@@ -111,6 +111,10 @@ class CustomerProfileIntegrationTest extends AbstractIntegrationTest {
                 .header("Authorization", "Bearer " + accessToken)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
+                .andDo(result -> {
+                    System.out.println("Create Profile Response Status: " + result.getResponse().getStatus());
+                    System.out.println("Create Profile Response Body: " + result.getResponse().getContentAsString());
+                })
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.profileId").exists())
                 .andExpect(jsonPath("$.message").value("프로필이 성공적으로 생성되었습니다."));
