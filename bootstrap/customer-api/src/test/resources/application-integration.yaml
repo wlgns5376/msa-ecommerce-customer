@@ -1,0 +1,32 @@
+spring:
+  profiles:
+    active: integration
+  
+  # Kafka 비활성화
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      enabled: false
+    consumer:
+      enabled: false
+  
+  # 이벤트 발행 비활성화
+  application:
+    events:
+      enabled: false
+      
+  # 테스트용 Eureka 비활성화
+  cloud:
+    discovery:
+      enabled: false
+      
+# Eureka 클라이언트 비활성화
+eureka:
+  client:
+    enabled: false
+    
+# 로깅 설정
+logging:
+  level:
+    com.commerce: DEBUG
+    org.springframework.kafka: WARN
