@@ -15,11 +15,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.annotation.Transactional;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @AutoConfigureMockMvc
+@Transactional
 @DisplayName("계정 활성화 플로우 통합테스트")
 class AccountActivationIntegrationTest extends AbstractIntegrationTest {
 
@@ -70,7 +72,7 @@ class AccountActivationIntegrationTest extends AbstractIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(activateRequest)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.activated").value(true))
                 .andExpect(jsonPath("$.message").value("계정이 성공적으로 활성화되었습니다."));
         
         // 4. 활성화된 계정으로 로그인
