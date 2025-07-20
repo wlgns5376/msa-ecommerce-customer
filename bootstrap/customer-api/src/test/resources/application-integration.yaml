@@ -2,6 +2,13 @@ spring:
   profiles:
     active: integration
   
+  # 기본 설정 비활성화  
+  cloud:
+    config:
+      enabled: false
+  config:
+    import: optional:configserver:
+  
   # Kafka 비활성화
   kafka:
     bootstrap-servers: localhost:9092
@@ -15,10 +22,6 @@ spring:
     events:
       enabled: false
       
-  # 테스트용 Eureka 비활성화
-  cloud:
-    discovery:
-      enabled: false
       
 # Eureka 클라이언트 비활성화
 eureka:

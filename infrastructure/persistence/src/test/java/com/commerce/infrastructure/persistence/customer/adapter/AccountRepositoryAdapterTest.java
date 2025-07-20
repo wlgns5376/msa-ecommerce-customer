@@ -62,7 +62,8 @@ class AccountRepositoryAdapterTest {
                 AccountStatus.ACTIVE,
                 LocalDateTime.now(),
                 LocalDateTime.now(),
-                null
+                null,
+                null // activationCode - 활성화된 계정이므로 null
         );
 
         testAccountEntity = AccountEntity.builder()

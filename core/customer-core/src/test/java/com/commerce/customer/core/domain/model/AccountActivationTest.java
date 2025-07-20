@@ -1,5 +1,7 @@
 package com.commerce.customer.core.domain.model;
 
+import com.commerce.customer.core.domain.event.AccountActivatedEvent;
+import com.commerce.customer.core.domain.event.AccountCreatedEvent;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

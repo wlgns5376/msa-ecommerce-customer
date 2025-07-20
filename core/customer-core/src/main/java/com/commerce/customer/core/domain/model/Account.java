@@ -24,6 +24,11 @@ public class Account {
     private ActivationCode activationCode;
 
     private final List<Object> domainEvents = new ArrayList<>();
+    
+    // 영속성 계층에서 필요
+    public ActivationCode getActivationCode() {
+        return activationCode;
+    }
 
     private Account(AccountId accountId, CustomerId customerId, Email email, 
                    Password password, AccountStatus status, LocalDateTime createdAt) {
