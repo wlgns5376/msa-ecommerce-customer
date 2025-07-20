@@ -43,6 +43,34 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
     }
     
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<ErrorResponse> handleIllegalStateException(
+            IllegalStateException ex) {
+        
+        log.warn("IllegalStateException occurred: {}", ex.getMessage());
+        
+        ErrorResponse errorResponse = new ErrorResponse(
+                "INVALID_STATE",
+                ex.getMessage()
+        );
+        
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+    }
+    
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleResourceNotFoundException(
+            ResourceNotFoundException ex) {
+        
+        log.warn("ResourceNotFoundException occurred: {}", ex.getMessage());
+        
+        ErrorResponse errorResponse = new ErrorResponse(
+                "RESOURCE_NOT_FOUND",
+                ex.getMessage()
+        );
+        
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
+    }
+    
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGenericException(Exception ex) {
         log.error("Unexpected error occurred", ex);

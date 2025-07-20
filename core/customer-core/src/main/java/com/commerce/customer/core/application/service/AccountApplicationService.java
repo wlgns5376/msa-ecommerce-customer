@@ -82,6 +82,12 @@ public class AccountApplicationService implements CreateAccountUseCase, LoginUse
                 .orElseThrow(() -> new IllegalArgumentException("계정을 찾을 수 없습니다."));
     }
     
+    @Transactional(readOnly = true)
+    public Account getAccountByEmail(Email email) {
+        return accountRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("계정을 찾을 수 없습니다."));
+    }
+    
     public void activateAccount(ActivateAccountUseCase useCase) {
         Account account = accountRepository.findById(useCase.getAccountId())
                 .orElseThrow(() -> new IllegalArgumentException("계정을 찾을 수 없습니다."));

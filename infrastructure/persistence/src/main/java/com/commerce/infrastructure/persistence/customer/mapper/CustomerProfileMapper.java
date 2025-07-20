@@ -132,12 +132,25 @@ public class CustomerProfileMapper {
                 .brandPreferences(brandPreferences)
                 .build();
 
-        // CustomerProfile 생성 (create 메서드 사용)
-        return CustomerProfile.create(
+        // CustomerProfile 생성
+        CustomerProfile profile = CustomerProfile.create(
                 CustomerId.of(entity.getCustomerId()),
                 personalInfo,
                 contactInfo
         );
+        
+        // ProfileId 설정 (리플렉션 사용)
+        if (entity.getProfileId() != null) {
+            try {
+                java.lang.reflect.Field profileIdField = CustomerProfile.class.getDeclaredField("profileId");
+                profileIdField.setAccessible(true);
+                profileIdField.set(profile, ProfileId.of(entity.getProfileId()));
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to set profileId", e);
+            }
+        }
+        
+        return profile;
     }
 
     private Address mapAddressToDomain(AddressEntity entity) {

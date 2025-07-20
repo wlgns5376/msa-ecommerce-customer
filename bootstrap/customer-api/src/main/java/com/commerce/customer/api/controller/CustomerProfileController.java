@@ -3,8 +3,10 @@ package com.commerce.customer.api.controller;
 import com.commerce.customer.api.dto.profile.AddressRequest;
 import com.commerce.customer.api.dto.profile.CreateProfileRequest;
 import com.commerce.customer.api.dto.profile.CreateProfileResponse;
+import com.commerce.customer.api.dto.profile.ProfileResponse;
 import com.commerce.customer.api.dto.profile.UpdateProfileRequest;
 import com.commerce.customer.api.dto.profile.UpdateProfileResponse;
+import com.commerce.customer.api.exception.ResourceNotFoundException;
 import com.commerce.customer.core.application.service.CustomerProfileApplicationService;
 import com.commerce.customer.core.domain.model.AccountId;
 import com.commerce.customer.core.domain.model.profile.Address;
@@ -80,7 +82,7 @@ public class CustomerProfileController {
     
     @Operation(summary = "프로필 조회", description = "현재 로그인된 계정의 프로필을 조회합니다.")
     @GetMapping("/me")
-    public ResponseEntity<CustomerProfile> getMyProfile(HttpServletRequest request) {
+    public ResponseEntity<ProfileResponse> getMyProfile(HttpServletRequest request) {
         JwtClaims jwtClaims = (JwtClaims) request.getAttribute("jwtClaims");
         if (jwtClaims == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
@@ -88,9 +90,15 @@ public class CustomerProfileController {
         
         Long accountId = Long.valueOf(jwtClaims.getAccountId());
         
-        CustomerProfile profile = customerProfileApplicationService.getProfileByAccountId(AccountId.of(accountId));
-        
-        return ResponseEntity.ok(profile);
+        try {
+            CustomerProfile profile = customerProfileApplicationService.getProfileByAccountId(AccountId.of(accountId));
+            return ResponseEntity.ok(ProfileResponse.from(profile));
+        } catch (IllegalArgumentException e) {
+            if (e.getMessage().contains("프로필을 찾을 수 없습니다")) {
+                throw new ResourceNotFoundException(e.getMessage());
+            }
+            throw e;
+        }
     }
     
     @Operation(summary = "프로필 조회 (ID)", description = "프로필 ID로 프로필을 조회합니다.")
@@ -115,15 +123,22 @@ public class CustomerProfileController {
         
         Long accountId = Long.valueOf(jwtClaims.getAccountId());
         
-        // 전화번호 업데이트
-        if (request.getPhoneNumber() != null) {
-            PhoneNumber phoneNumber = PhoneNumber.ofKorean(request.getPhoneNumber());
-            customerProfileApplicationService.updatePhoneNumber(AccountId.of(accountId), phoneNumber);
+        try {
+            // 전화번호 업데이트
+            if (request.getPhoneNumber() != null) {
+                PhoneNumber phoneNumber = PhoneNumber.ofKorean(request.getPhoneNumber());
+                customerProfileApplicationService.updatePhoneNumber(AccountId.of(accountId), phoneNumber);
+            }
+            
+            // TODO: 다른 필드 업데이트 로직 추가 (주소, 알림 설정, 마케팅 동의 등)
+            
+            return ResponseEntity.ok(UpdateProfileResponse.success());
+        } catch (IllegalArgumentException e) {
+            if (e.getMessage().contains("프로필을 찾을 수 없습니다")) {
+                throw new ResourceNotFoundException(e.getMessage());
+            }
+            throw e;
         }
-        
-        // TODO: 다른 필드 업데이트 로직 추가 (주소, 알림 설정, 마케팅 동의 등)
-        
-        return ResponseEntity.ok(UpdateProfileResponse.success());
     }
     
     @Operation(summary = "주소 추가", description = "프로필에 새로운 주소를 추가합니다.")

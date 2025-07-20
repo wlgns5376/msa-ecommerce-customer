@@ -45,14 +45,14 @@ public abstract class AbstractIntegrationTest {
             .withDatabaseName("test")
             .withUsername("test")
             .withPassword("test")
-            .withReuse(true)
+            .withReuse(false)
             .withStartupTimeoutSeconds(120)
             .waitingFor(Wait.forListeningPort().withStartupTimeout(Duration.ofSeconds(120)));
 
     @Container
     static final GenericContainer<?> redis = new GenericContainer<>(parse("redis:7-alpine"))
             .withExposedPorts(6379)
-            .withReuse(true)
+            .withReuse(false)
             .waitingFor(Wait.forListeningPort().withStartupTimeout(Duration.ofSeconds(60)));
 
     @BeforeAll

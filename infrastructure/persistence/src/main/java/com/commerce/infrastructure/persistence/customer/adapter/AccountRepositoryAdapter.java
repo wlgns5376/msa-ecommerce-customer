@@ -29,7 +29,30 @@ public class AccountRepositoryAdapter implements AccountRepository {
 
     @Override
     public Account save(Account account) {
-        AccountEntity entity = accountMapper.toEntity(account);
+        AccountEntity entity;
+        
+        // ID가 있는 경우 기존 엔티티를 조회하여 업데이트
+        if (account.getAccountId() != null && account.getAccountId().isAssigned()) {
+            entity = accountJpaRepository.findById(account.getAccountId().getValue())
+                    .orElseThrow(() -> new IllegalArgumentException("계정을 찾을 수 없습니다: " + account.getAccountId().getValue()));
+            
+            // 엔티티 필드 업데이트
+            entity.updateStatus(AccountEntity.AccountStatus.valueOf(account.getStatus().name()));
+            if (account.getLastLoginAt() != null) {
+                entity.updateLastLoginAt(account.getLastLoginAt());
+            }
+            if (account.getActivationCode() != null) {
+                entity.updateActivationCode(account.getActivationCode().getCode(), account.getActivationCode().getExpiresAt());
+            }
+            // 활성화된 경우 활성화 시간 설정
+            if (account.getStatus() == AccountStatus.ACTIVE && entity.getActivatedAt() == null) {
+                entity.updateActivatedAt(java.time.LocalDateTime.now());
+            }
+        } else {
+            // 새로운 엔티티 생성
+            entity = accountMapper.toEntity(account);
+        }
+        
         AccountEntity savedEntity = accountJpaRepository.save(entity);
         return accountMapper.toDomain(savedEntity);
     }
