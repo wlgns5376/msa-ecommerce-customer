@@ -6,8 +6,6 @@ spring:
     allow-bean-definition-overriding: true
   
   cloud:
-    discovery:
-      enabled: false
     config:
       enabled: false
     
@@ -40,12 +38,6 @@ spring:
       secret: test-secret-key-for-integration-test-that-is-long-enough
       expiration: 3600000
       refresh-expiration: 86400000
-    
-eureka:
-  client:
-    enabled: false
-    register-with-eureka: false
-    fetch-registry: false
 
 logging:
   level:
