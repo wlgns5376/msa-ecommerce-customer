@@ -6,8 +6,6 @@ spring:
     allow-bean-definition-overriding: true
   
   cloud:
-    discovery:
-      enabled: false
     config:
       enabled: false
     
