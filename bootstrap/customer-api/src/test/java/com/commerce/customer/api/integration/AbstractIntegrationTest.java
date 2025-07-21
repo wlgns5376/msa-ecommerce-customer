@@ -105,8 +105,7 @@ public abstract class AbstractIntegrationTest {
         // 이벤트 발행 비활성화
         registry.add("spring.application.events.enabled", () -> "false");
         
-        // Eureka 비활성화
-        registry.add("eureka.client.enabled", () -> "false");
+        // Cloud Discovery 비활성화
         registry.add("spring.cloud.discovery.enabled", () -> "false");
     }
 
