@@ -65,12 +65,16 @@ public class AccountController {
         Email email = Email.of(request.getEmail());
         Password password = Password.of(request.getPassword());
         
+        // 로그인 처리 및 토큰 생성
         TokenPair tokenPair = accountApplicationService.login(email, password);
+        
+        // 이메일로 계정 조회하여 accountId 가져오기
+        Account account = accountApplicationService.getAccountByEmail(email);
         
         LoginResponse response = new LoginResponse(
                 tokenPair.getAccessToken().getValue(),
                 tokenPair.getRefreshToken().getValue(),
-                1L, // 임시 ID - 실제로는 JWT Claims에서 추출해야 함
+                account.getAccountId().getValue(),
                 email.getValue()
         );
         

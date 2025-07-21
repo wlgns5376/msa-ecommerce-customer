@@ -64,9 +64,10 @@ class AccountTest {
         void activate_PendingAccount_ShouldSuccess() {
             // Given
             Account account = createTestAccount();
+            String activationCode = account.getActivationCode().getCode();
 
             // When
-            account.activate();
+            account.activate(activationCode);
 
             // Then
             assertThat(account.getStatus()).isEqualTo(AccountStatus.ACTIVE);
@@ -77,10 +78,11 @@ class AccountTest {
         void activate_ActiveAccount_ShouldThrowException() {
             // Given
             Account account = createTestAccount();
-            account.activate(); // 먼저 활성화
+            String activationCode = account.getActivationCode().getCode();
+            account.activate(activationCode); // 먼저 활성화
 
             // When & Then
-            assertThatThrownBy(account::activate)
+            assertThatThrownBy(() -> account.activate(activationCode))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("현재 상태에서는 활성화할 수 없습니다");
         }
@@ -95,7 +97,8 @@ class AccountTest {
         void recordSuccessfulLogin_WithActiveAccount_ShouldSuccess() {
             // Given
             Account account = createTestAccount();
-            account.activate();
+            String activationCode = account.getActivationCode().getCode();
+            account.activate(activationCode);
 
             // When
             account.recordSuccessfulLogin();
@@ -146,7 +149,8 @@ class AccountTest {
         void changePassword_WithActiveAccount_ShouldSuccess() {
             // Given
             Account account = createTestAccount();
-            account.activate();
+            String activationCode = account.getActivationCode().getCode();
+            account.activate(activationCode);
             Password newPassword = Password.of("NewPass123!@#");
 
             // When

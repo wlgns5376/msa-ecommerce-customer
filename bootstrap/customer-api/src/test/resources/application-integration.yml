@@ -11,12 +11,6 @@ spring:
     config:
       enabled: false
     
-eureka:
-  client:
-    enabled: false
-    register-with-eureka: false
-    fetch-registry: false
-  
   datasource:
     # TestContainers에서 동적으로 설정됨
     url: jdbc:h2:mem:testdb
@@ -46,6 +40,12 @@ eureka:
       secret: test-secret-key-for-integration-test-that-is-long-enough
       expiration: 3600000
       refresh-expiration: 86400000
+    
+eureka:
+  client:
+    enabled: false
+    register-with-eureka: false
+    fetch-registry: false
 
 logging:
   level:

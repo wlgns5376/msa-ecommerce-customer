@@ -12,6 +12,7 @@ import com.commerce.customer.core.domain.model.profile.ContactInfo;
 import com.commerce.customer.core.domain.model.profile.Address;
 import com.commerce.customer.core.domain.model.profile.AddressId;
 import com.commerce.customer.core.domain.model.profile.ProfilePreferences;
+import com.commerce.customer.core.domain.model.profile.PhoneNumber;
 import com.commerce.customer.core.domain.repository.AccountRepository;
 import com.commerce.customer.core.domain.repository.profile.CustomerProfileRepository;
 import com.commerce.customer.core.domain.service.profile.CustomerProfileDomainService;
@@ -93,5 +94,22 @@ public class CustomerProfileApplicationService implements CreateCustomerProfileU
     @Override
     public void updatePreferences(ProfileId profileId, ProfilePreferences preferences) {
         customerProfileDomainService.updatePreferences(profileId, preferences);
+    }
+    
+    /**
+     * 전화번호 업데이트
+     * AccountId를 사용하여 프로필을 찾아 전화번호를 업데이트합니다.
+     */
+    public void updatePhoneNumber(AccountId accountId, PhoneNumber phoneNumber) {
+        CustomerId customerId = accountRepository.findById(accountId)
+                .orElseThrow(() -> new IllegalArgumentException("계정을 찾을 수 없습니다."))
+                .getCustomerId();
+        
+        CustomerProfile profile = customerProfileRepository.findByCustomerId(customerId)
+                .orElseThrow(() -> new IllegalArgumentException("계정의 프로필을 찾을 수 없습니다."));
+        
+        ContactInfo updatedContactInfo = ContactInfo.of(phoneNumber);
+        profile.updateContactInfo(updatedContactInfo);
+        customerProfileRepository.save(profile);
     }
 }

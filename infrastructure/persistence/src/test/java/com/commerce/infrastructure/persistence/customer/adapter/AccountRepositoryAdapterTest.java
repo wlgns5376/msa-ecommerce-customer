@@ -62,7 +62,8 @@ class AccountRepositoryAdapterTest {
                 AccountStatus.ACTIVE,
                 LocalDateTime.now(),
                 LocalDateTime.now(),
-                null
+                null,
+                null // activationCode - 활성화된 계정이므로 null
         );
 
         testAccountEntity = AccountEntity.builder()
@@ -83,10 +84,10 @@ class AccountRepositoryAdapterTest {
     }
 
     @Test
-    @DisplayName("계정을 성공적으로 저장한다")
-    void save_Success() {
+    @DisplayName("기존 계정을 성공적으로 업데이트한다")
+    void save_ExistingAccount_Success() {
         // Given
-        given(accountMapper.toEntity(testAccount)).willReturn(testAccountEntity);
+        given(accountJpaRepository.findById(1L)).willReturn(Optional.of(testAccountEntity));
         given(accountJpaRepository.save(testAccountEntity)).willReturn(testAccountEntity);
         given(accountMapper.toDomain(testAccountEntity)).willReturn(testAccount);
 
@@ -99,8 +100,41 @@ class AccountRepositoryAdapterTest {
         assertThat(result.getEmail()).isEqualTo(email);
         assertThat(result.getStatus()).isEqualTo(AccountStatus.ACTIVE);
         
-        then(accountMapper).should(times(1)).toEntity(testAccount);
+        then(accountJpaRepository).should(times(1)).findById(1L);
         then(accountJpaRepository).should(times(1)).save(testAccountEntity);
+        then(accountMapper).should(times(1)).toDomain(testAccountEntity);
+    }
+
+    @Test
+    @DisplayName("새로운 계정을 성공적으로 저장한다")
+    void save_NewAccount_Success() {
+        // Given
+        Account newAccount = Account.create(
+                customerId,
+                email,
+                Password.of("ValidPass123!")
+        );
+        
+        AccountEntity newAccountEntity = AccountEntity.builder()
+                .customerId(1L)
+                .email("test@example.com")
+                .password("ValidPass123!")
+                .status(AccountEntity.AccountStatus.INACTIVE)
+                .build();
+        
+        given(accountMapper.toEntity(newAccount)).willReturn(newAccountEntity);
+        given(accountJpaRepository.save(newAccountEntity)).willReturn(testAccountEntity);
+        given(accountMapper.toDomain(testAccountEntity)).willReturn(testAccount);
+
+        // When
+        Account result = accountRepositoryAdapter.save(newAccount);
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.getEmail()).isEqualTo(email);
+        
+        then(accountMapper).should(times(1)).toEntity(newAccount);
+        then(accountJpaRepository).should(times(1)).save(newAccountEntity);
         then(accountMapper).should(times(1)).toDomain(testAccountEntity);
     }
 

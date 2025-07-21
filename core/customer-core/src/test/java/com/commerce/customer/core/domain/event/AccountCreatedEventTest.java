@@ -23,7 +23,7 @@ class AccountCreatedEventTest {
         LocalDateTime before = LocalDateTime.now();
 
         // When
-        AccountCreatedEvent event = new AccountCreatedEvent(accountId, customerId, email);
+        AccountCreatedEvent event = new AccountCreatedEvent(accountId, customerId, email, "testActivationCode123456789012");
 
         // Then
         LocalDateTime after = LocalDateTime.now();
@@ -43,7 +43,7 @@ class AccountCreatedEventTest {
         Email email = Email.of("test@example.com");
 
         // When
-        AccountCreatedEvent event = new AccountCreatedEvent(accountId, customerId, email);
+        AccountCreatedEvent event = new AccountCreatedEvent(accountId, customerId, email, "testActivationCode123456789012");
 
         // Then
         assertThat(event.getOccurredAt()).isNotNull();
@@ -63,9 +63,9 @@ class AccountCreatedEventTest {
         Email email2 = Email.of("test2@example.com");
 
         // When
-        AccountCreatedEvent event1 = new AccountCreatedEvent(accountId1, customerId1, email1);
+        AccountCreatedEvent event1 = new AccountCreatedEvent(accountId1, customerId1, email1, "testActivationCode123456789012");
         Thread.sleep(1); // 시간 차이를 만들기 위한 대기
-        AccountCreatedEvent event2 = new AccountCreatedEvent(accountId2, customerId2, email2);
+        AccountCreatedEvent event2 = new AccountCreatedEvent(accountId2, customerId2, email2, "testActivationCode223456789012");
 
         // Then
         assertThat(event2.getOccurredAt()).isAfterOrEqualTo(event1.getOccurredAt());
@@ -80,9 +80,9 @@ class AccountCreatedEventTest {
         Email email = Email.of("test@example.com");
 
         // When
-        AccountCreatedEvent event1 = new AccountCreatedEvent(accountId, customerId, email);
+        AccountCreatedEvent event1 = new AccountCreatedEvent(accountId, customerId, email, "testActivationCode123456789012");
         Thread.sleep(1);
-        AccountCreatedEvent event2 = new AccountCreatedEvent(accountId, customerId, email);
+        AccountCreatedEvent event2 = new AccountCreatedEvent(accountId, customerId, email, "testActivationCode123456789012");
 
         // Then
         assertThat(event1).isNotSameAs(event2);
@@ -98,12 +98,13 @@ class AccountCreatedEventTest {
         Email email = Email.of("user@domain.com");
 
         // When
-        AccountCreatedEvent event = new AccountCreatedEvent(accountId, customerId, email);
+        AccountCreatedEvent event = new AccountCreatedEvent(accountId, customerId, email, "testActivationCode123456789012");
 
         // Then
         assertThat(event.getAccountId().getValue()).isEqualTo(123L);
         assertThat(event.getCustomerId().getValue()).isEqualTo(456L);
         assertThat(event.getEmail().getValue()).isEqualTo("user@domain.com");
+        assertThat(event.getActivationCode()).isEqualTo("testActivationCode123456789012");
         assertThat(event.getOccurredAt()).isNotNull();
     }
 }

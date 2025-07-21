@@ -1,8 +1,10 @@
 package com.commerce.customer.api.integration;
 
+import com.commerce.customer.api.config.TestKafkaConfig;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -35,6 +37,7 @@ import static org.testcontainers.utility.DockerImageName.parse;
     DirtiesContextTestExecutionListener.class,
     TransactionalTestExecutionListener.class
 })
+@Import(TestKafkaConfig.class)
 public abstract class AbstractIntegrationTest {
 
     @Container
@@ -42,14 +45,14 @@ public abstract class AbstractIntegrationTest {
             .withDatabaseName("test")
             .withUsername("test")
             .withPassword("test")
-            .withReuse(true)
+            .withReuse(false)
             .withStartupTimeoutSeconds(120)
             .waitingFor(Wait.forListeningPort().withStartupTimeout(Duration.ofSeconds(120)));
 
     @Container
     static final GenericContainer<?> redis = new GenericContainer<>(parse("redis:7-alpine"))
             .withExposedPorts(6379)
-            .withReuse(true)
+            .withReuse(false)
             .waitingFor(Wait.forListeningPort().withStartupTimeout(Duration.ofSeconds(60)));
 
     @BeforeAll
@@ -93,6 +96,18 @@ public abstract class AbstractIntegrationTest {
         
         // Flyway 비활성화
         registry.add("spring.flyway.enabled", () -> "false");
+        
+        // Kafka 비활성화
+        registry.add("spring.kafka.bootstrap-servers", () -> "localhost:9092");
+        registry.add("spring.kafka.producer.enabled", () -> "false");
+        registry.add("spring.kafka.consumer.enabled", () -> "false");
+        
+        // 이벤트 발행 비활성화
+        registry.add("spring.application.events.enabled", () -> "false");
+        
+        // Eureka 비활성화
+        registry.add("eureka.client.enabled", () -> "false");
+        registry.add("spring.cloud.discovery.enabled", () -> "false");
     }
 
     protected void waitForContainers() {

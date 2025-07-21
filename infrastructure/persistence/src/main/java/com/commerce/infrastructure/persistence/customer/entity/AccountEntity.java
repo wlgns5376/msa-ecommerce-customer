@@ -87,6 +87,15 @@ public class AccountEntity extends BaseEntity {
     public void updatePassword(String password) {
         this.password = password;
     }
+    
+    public void updateActivationCode(String activationCode, LocalDateTime activationCodeExpiresAt) {
+        this.activationCode = activationCode;
+        this.activationCodeExpiresAt = activationCodeExpiresAt;
+    }
+    
+    public void updateActivatedAt(LocalDateTime activatedAt) {
+        this.activatedAt = activatedAt;
+    }
 
     /**
      * 논리적 삭제 (Soft Delete) 수행

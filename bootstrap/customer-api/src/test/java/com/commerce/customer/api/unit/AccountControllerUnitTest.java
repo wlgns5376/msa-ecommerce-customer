@@ -85,6 +85,11 @@ class AccountControllerUnitTest {
     void login_Success() {
         // given
         given(accountApplicationService.login(any(), any())).willReturn(tokenPair);
+        Account mockAccount = mock(Account.class);
+        AccountId mockAccountId = mock(AccountId.class);
+        given(mockAccount.getAccountId()).willReturn(mockAccountId);
+        given(mockAccountId.getValue()).willReturn(1L);
+        given(accountApplicationService.getAccountByEmail(any())).willReturn(mockAccount);
 
         // when
         ResponseEntity<LoginResponse> response = accountController.login(loginRequest);
@@ -93,7 +98,10 @@ class AccountControllerUnitTest {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody().getAccessToken()).isEqualTo("accessToken");
         assertThat(response.getBody().getRefreshToken()).isEqualTo("refreshToken");
+        assertThat(response.getBody().getAccountId()).isEqualTo(1L);
+        assertThat(response.getBody().getEmail()).isEqualTo("test@example.com");
         then(accountApplicationService).should().login(any(), any());
+        then(accountApplicationService).should().getAccountByEmail(any());
     }
 
     @Test

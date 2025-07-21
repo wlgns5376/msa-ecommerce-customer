@@ -94,6 +94,7 @@ msa_ecommerce_customer/
 7. Core 패키지 구조: domain, application, usecase로 명확히 분리
 8. 성능 최적화: 쿼리 최적화, 인덱스 설정 등 고려, JPA N+1 고려, 필요 시 QueryDSL 사용
 9. 클린 코드 원칙 준수: 가독성, 유지 보수성, 테스트 용이성, 확장 가능성 고려
+10. GitHub App 인증 사용: 모든 GitHub 작업은 GitHub App 인증으로 수행
 
 ## 테스트 코드 규칙
 - Given-When-Then 패턴 적용
