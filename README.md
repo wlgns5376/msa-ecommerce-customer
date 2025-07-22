@@ -132,6 +132,15 @@ http://localhost:8080/api-docs
 
 # 테스트 커버리지 확인
 ./gradlew jacocoTestReport
+
+# 특정 테스트 클래스만 실행
+./gradlew test --tests "*.AccountApplicationServiceTest"
+
+# 테스트 결과 리포트 보기 (브라우저에서 열기)
+open core/customer-core/build/reports/tests/test/index.html
+
+# 테스트 커버리지 리포트 보기 (브라우저에서 열기)
+open core/customer-core/build/reports/jacoco/test/html/index.html
 ```
 
 ## 📝 개발 가이드
