@@ -66,7 +66,7 @@ jobs:
       run: ./gradlew test
       
     - name: Run integration tests
-      run: ./gradlew :customer-api:test
+      run: ./gradlew :customer-api:test --no-daemon
       
     - name: Generate test report
       uses: dorny/test-reporter@v1
