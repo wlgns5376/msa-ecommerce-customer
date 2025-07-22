@@ -6,6 +6,8 @@ on:
     paths:
       - 'core/**'
       - 'common/**'
+      - 'bootstrap/**'
+      - 'infrastructure/**'
       - 'build.gradle'
       - 'settings.gradle'
       - '.github/workflows/**'
@@ -15,6 +17,8 @@ on:
     paths:
       - 'core/**'
       - 'common/**'
+      - 'bootstrap/**'
+      - 'infrastructure/**'
       - 'build.gradle'
       - 'settings.gradle'
       - '.github/workflows/**'
