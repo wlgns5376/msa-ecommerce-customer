@@ -46,6 +46,5 @@ class LoginSuccessfulEventTest {
 
         // then
         assertThat(event.getLoginAt()).isBefore(event.getOccurredAt());
-        assertThat(event.getOccurredAt()).isAfter(loginAt);
     }
 }

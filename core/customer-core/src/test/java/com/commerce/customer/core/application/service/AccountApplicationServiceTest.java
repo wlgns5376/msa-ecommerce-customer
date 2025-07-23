@@ -261,11 +261,9 @@ class AccountApplicationServiceTest {
     void activateAccount_Success() {
         // given
         String activationCode = "ACTIVATION123";
-        ActivateAccountUseCase useCase = mock(ActivateAccountUseCase.class);
+        ActivateAccountUseCase useCase = new ActivateAccountUseCase(accountId, activationCode);
         AccountActivatedEvent event = AccountActivatedEvent.of(accountId, customerId);
         
-        given(useCase.getAccountId()).willReturn(accountId);
-        given(useCase.getActivationCode()).willReturn(activationCode);
         given(accountRepository.findById(accountId)).willReturn(Optional.of(account));
         given(account.getDomainEvents()).willReturn(List.of(event));
 
@@ -283,9 +281,8 @@ class AccountApplicationServiceTest {
     @DisplayName("계정 활성화 실패 - 존재하지 않는 계정")
     void activateAccount_NotFound() {
         // given
-        ActivateAccountUseCase useCase = mock(ActivateAccountUseCase.class);
+        ActivateAccountUseCase useCase = new ActivateAccountUseCase(accountId, "any-activation-code");
         
-        given(useCase.getAccountId()).willReturn(accountId);
         given(accountRepository.findById(accountId)).willReturn(Optional.empty());
 
         // when & then

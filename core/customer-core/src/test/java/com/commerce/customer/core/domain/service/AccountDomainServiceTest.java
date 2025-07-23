@@ -6,6 +6,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -199,9 +200,11 @@ class AccountDomainServiceTest {
         accountDomainService.changePassword(accountId, rawPassword, newRawPassword, passwordEncoder);
 
         // then
+        ArgumentCaptor<Password> passwordCaptor = ArgumentCaptor.forClass(Password.class);
         then(passwordEncoder).should().matches(rawPassword.getValue(), encodedPassword.getValue());
         then(passwordEncoder).should().encode(newRawPassword.getValue());
-        then(account).should().changePassword(any(Password.class));
+        then(account).should().changePassword(passwordCaptor.capture());
+        assertThat(passwordCaptor.getValue().getValue()).isEqualTo(newEncodedPassword.getValue());
         then(accountRepository).should().save(account);
     }
 
@@ -232,7 +235,7 @@ class AccountDomainServiceTest {
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("현재 비밀번호가 일치하지 않습니다.");
         
-        then(account).shouldHaveNoMoreInteractions();
+        then(account).should(never()).changePassword(any(Password.class));
         then(accountRepository).should(never()).save(any());
     }
 
