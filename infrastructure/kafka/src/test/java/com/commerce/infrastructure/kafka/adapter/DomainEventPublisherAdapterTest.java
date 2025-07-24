@@ -35,12 +35,12 @@ class DomainEventPublisherAdapterTest {
     @DisplayName("계정 생성 이벤트를 Kafka로 발행한다")
     void publishAccountCreatedEvent_ShouldDelegateToKafkaEventPublisher() {
         // given
-        AccountCreatedEvent event = AccountCreatedEvent.builder()
-                .accountId(AccountId.of(123L))
-                .customerId(CustomerId.of("CUST123"))
-                .email(Email.of("test@example.com"))
-                .occurredAt(LocalDateTime.now())
-                .build();
+        AccountCreatedEvent event = new AccountCreatedEvent(
+                AccountId.of(123L),
+                CustomerId.of(123L),
+                Email.of("test@example.com"),
+                "ACTIVATE123"
+        );
 
         // when
         adapter.publishAccountCreatedEvent(event);
@@ -54,13 +54,10 @@ class DomainEventPublisherAdapterTest {
     @DisplayName("계정 활성화 이벤트를 Kafka로 발행한다")
     void publishAccountActivatedEvent_ShouldDelegateToKafkaEventPublisher() {
         // given
-        AccountActivatedEvent event = AccountActivatedEvent.builder()
-                .accountId(AccountId.of(456L))
-                .customerId(CustomerId.of("CUST456"))
-                .email(Email.of("activated@example.com"))
-                .activatedAt(LocalDateTime.now())
-                .occurredAt(LocalDateTime.now())
-                .build();
+        AccountActivatedEvent event = AccountActivatedEvent.of(
+                AccountId.of(456L),
+                CustomerId.of(456L)
+        );
 
         // when
         adapter.publishAccountActivatedEvent(event);
@@ -74,20 +71,17 @@ class DomainEventPublisherAdapterTest {
     @DisplayName("여러 이벤트를 순차적으로 발행한다")
     void publishMultipleEvents_ShouldDelegateAllToKafkaEventPublisher() {
         // given
-        AccountCreatedEvent createdEvent = AccountCreatedEvent.builder()
-                .accountId(AccountId.of(789L))
-                .customerId(CustomerId.of("CUST789"))
-                .email(Email.of("multi@example.com"))
-                .occurredAt(LocalDateTime.now())
-                .build();
+        AccountCreatedEvent createdEvent = new AccountCreatedEvent(
+                AccountId.of(789L),
+                CustomerId.of(789L),
+                Email.of("multi@example.com"),
+                "ACTIVATE789"
+        );
 
-        AccountActivatedEvent activatedEvent = AccountActivatedEvent.builder()
-                .accountId(AccountId.of(789L))
-                .customerId(CustomerId.of("CUST789"))
-                .email(Email.of("multi@example.com"))
-                .activatedAt(LocalDateTime.now())
-                .occurredAt(LocalDateTime.now())
-                .build();
+        AccountActivatedEvent activatedEvent = AccountActivatedEvent.of(
+                AccountId.of(789L),
+                CustomerId.of(789L)
+        );
 
         // when
         adapter.publishAccountCreatedEvent(createdEvent);

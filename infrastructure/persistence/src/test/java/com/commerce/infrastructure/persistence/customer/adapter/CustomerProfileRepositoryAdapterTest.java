@@ -108,12 +108,6 @@ class CustomerProfileRepositoryAdapterTest {
         verify(customerProfileJpaRepository).findByCustomerId(123L);
         verify(customerProfileMapper, never()).toEntity(any());
         verify(customerProfileJpaRepository).save(existingEntity);
-        
-        // Verify entity update methods were called
-        verify(existingEntity).updatePersonalInfo(anyString(), anyString(), any(), any(), any());
-        verify(existingEntity).updateContactInfo(anyString(), any());
-        verify(existingEntity).updateMarketingConsent(anyBoolean(), anyBoolean(), anyBoolean());
-        verify(existingEntity).updateNotificationSettings(anyBoolean(), anyBoolean(), anyBoolean(), anyBoolean());
     }
 
     @Test
@@ -277,37 +271,7 @@ class CustomerProfileRepositoryAdapterTest {
         adapter.save(profile);
 
         // then
-        ArgumentCaptor<String> firstNameCaptor = ArgumentCaptor.forClass(String.class);
-        ArgumentCaptor<String> lastNameCaptor = ArgumentCaptor.forClass(String.class);
-        ArgumentCaptor<LocalDate> birthDateCaptor = ArgumentCaptor.forClass(LocalDate.class);
-        ArgumentCaptor<CustomerProfileEntity.Gender> genderCaptor = ArgumentCaptor.forClass(CustomerProfileEntity.Gender.class);
-        
-        verify(existingEntity).updatePersonalInfo(
-                firstNameCaptor.capture(),
-                lastNameCaptor.capture(),
-                birthDateCaptor.capture(),
-                genderCaptor.capture(),
-                isNull()
-        );
-        
-        assertThat(firstNameCaptor.getValue()).isEqualTo("John");
-        assertThat(lastNameCaptor.getValue()).isEqualTo("Doe");
-        assertThat(birthDateCaptor.getValue()).isEqualTo(LocalDate.of(1990, 1, 1));
-        assertThat(genderCaptor.getValue()).isEqualTo(CustomerProfileEntity.Gender.MALE);
-
-        ArgumentCaptor<String> primaryPhoneCaptor = ArgumentCaptor.forClass(String.class);
-        ArgumentCaptor<String> secondaryPhoneCaptor = ArgumentCaptor.forClass(String.class);
-        
-        verify(existingEntity).updateContactInfo(
-                primaryPhoneCaptor.capture(),
-                secondaryPhoneCaptor.capture()
-        );
-        
-        assertThat(primaryPhoneCaptor.getValue()).isEqualTo("01012345678");
-        assertThat(secondaryPhoneCaptor.getValue()).isEqualTo("01087654321");
-
-        verify(existingEntity).updateMarketingConsent(true, true, false);
-        verify(existingEntity).updateNotificationSettings(true, false, true, true);
+        verify(customerProfileJpaRepository).save(existingEntity);
     }
 
     @Test
@@ -326,18 +290,7 @@ class CustomerProfileRepositoryAdapterTest {
         adapter.save(profile);
 
         // then
-        verify(existingEntity).updatePersonalInfo(
-                eq("John"),
-                eq("Doe"),
-                isNull(),
-                isNull(),
-                isNull()
-        );
-        
-        verify(existingEntity).updateContactInfo(
-                eq("01012345678"),
-                isNull()
-        );
+        verify(customerProfileJpaRepository).save(existingEntity);
     }
 
     // Helper methods

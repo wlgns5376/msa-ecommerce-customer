@@ -139,6 +139,9 @@ public class CustomerProfileMapper {
                 contactInfo
         );
         
+        // Preferences 업데이트
+        profile.updatePreferences(preferences);
+        
         // ProfileId 설정 (리플렉션 사용)
         if (entity.getProfileId() != null) {
             try {

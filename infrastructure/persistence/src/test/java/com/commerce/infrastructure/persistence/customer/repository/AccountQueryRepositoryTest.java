@@ -1,6 +1,6 @@
 package com.commerce.infrastructure.persistence.customer.repository;
 
-import com.commerce.infrastructure.persistence.TestApplication;
+import com.commerce.infrastructure.persistence.config.TestJpaConfig;
 import com.commerce.infrastructure.persistence.customer.entity.AccountEntity;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
@@ -11,7 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.context.annotation.Import;
-import org.springframework.test.context.ContextConfiguration;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -19,8 +18,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest
-@ContextConfiguration(classes = TestApplication.class)
-@Import(JPAQueryFactory.class)
+@Import(TestJpaConfig.class)
 class AccountQueryRepositoryTest {
 
     @Autowired

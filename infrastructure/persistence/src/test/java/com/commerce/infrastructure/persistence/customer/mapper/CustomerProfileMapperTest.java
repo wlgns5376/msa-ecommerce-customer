@@ -10,6 +10,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 
@@ -246,18 +247,32 @@ class CustomerProfileMapperTest {
         }
     }
 
-    @ParameterizedTest
-    @EnumSource(ProfileStatus.class)
-    @DisplayName("모든 ProfileStatus enum 값을 올바르게 매핑한다")
-    void shouldMapAllProfileStatusValues(ProfileStatus domainStatus) {
+    @Test
+    @DisplayName("ProfileStatus ACTIVE를 올바르게 매핑한다")
+    void shouldMapActiveStatus() {
         // given
-        CustomerProfile profile = createProfileWithStatus(domainStatus);
+        CustomerProfile profile = createMinimalProfile();
+        // 기본 생성 시 ACTIVE 상태
 
         // when
         CustomerProfileEntity entity = mapper.toEntity(profile);
 
         // then
-        assertThat(entity.getStatus().name()).isEqualTo(domainStatus.name());
+        assertThat(entity.getStatus()).isEqualTo(CustomerProfileEntity.ProfileStatus.ACTIVE);
+    }
+    
+    @Test
+    @DisplayName("ProfileStatus INACTIVE를 올바르게 매핑한다")
+    void shouldMapInactiveStatus() {
+        // given
+        CustomerProfile profile = createMinimalProfile();
+        profile.deactivate(); // INACTIVE로 변경
+
+        // when
+        CustomerProfileEntity entity = mapper.toEntity(profile);
+
+        // then
+        assertThat(entity.getStatus()).isEqualTo(CustomerProfileEntity.ProfileStatus.INACTIVE);
     }
 
     @Test
@@ -275,6 +290,200 @@ class CustomerProfileMapperTest {
         assertThat(mappedProfile.getPersonalInfo().getFullName()).isEqualTo(originalProfile.getPersonalInfo().getFullName());
         assertThat(mappedProfile.getContactInfo().getPrimaryPhone()).isEqualTo(originalProfile.getContactInfo().getPrimaryPhone());
         // Note: Collections and some optional fields might not be perfectly equal due to entity limitations
+    }
+
+    @Test
+    @DisplayName("ProfileStatus SUSPENDED를 올바르게 매핑한다")
+    void shouldMapSuspendedStatus() {
+        // given
+        CustomerProfile profile = createMinimalProfile();
+        // CustomerProfile에서 suspend를 직접 지원하지 않으므로 
+        // SUSPENDED 상태의 Entity를 생성하여 도메인으로 변환 테스트
+
+        CustomerProfileEntity suspendedEntity = createMinimalEntity();
+        suspendedEntity.updateStatus(CustomerProfileEntity.ProfileStatus.SUSPENDED);
+        CustomerProfile suspendedProfile = mapper.toDomain(suspendedEntity);
+        
+        // when
+        CustomerProfileEntity mappedEntity = mapper.toEntity(suspendedProfile);
+
+        // then
+        assertThat(mappedEntity.getStatus()).isEqualTo(CustomerProfileEntity.ProfileStatus.SUSPENDED);
+    }
+
+    @Test
+    @DisplayName("Entity의 모든 ProfileStatus를 도메인으로 매핑한다")
+    void shouldMapAllEntityStatusesToDomain() {
+        // given & when & then
+        // ACTIVE
+        CustomerProfileEntity activeEntity = createMinimalEntity();
+        activeEntity.updateStatus(CustomerProfileEntity.ProfileStatus.ACTIVE);
+        CustomerProfile activeProfile = mapper.toDomain(activeEntity);
+        assertThat(activeProfile.getStatus()).isEqualTo(ProfileStatus.ACTIVE);
+        
+        // INACTIVE
+        CustomerProfileEntity inactiveEntity = createMinimalEntity();
+        inactiveEntity.updateStatus(CustomerProfileEntity.ProfileStatus.INACTIVE);
+        CustomerProfile inactiveProfile = mapper.toDomain(inactiveEntity);
+        assertThat(inactiveProfile.getStatus()).isEqualTo(ProfileStatus.INACTIVE);
+        
+        // SUSPENDED
+        CustomerProfileEntity suspendedEntity = createMinimalEntity();
+        suspendedEntity.updateStatus(CustomerProfileEntity.ProfileStatus.SUSPENDED);
+        CustomerProfile suspendedProfile = mapper.toDomain(suspendedEntity);
+        assertThat(suspendedProfile.getStatus()).isEqualTo(ProfileStatus.SUSPENDED);
+    }
+
+    @Test
+    @DisplayName("빈 컬렉션을 가진 엔티티를 도메인으로 변환한다")
+    void toDomain_ShouldHandleEmptyCollections() {
+        // given
+        CustomerProfileEntity entity = createMinimalEntity();
+        // Entity의 컬렉션은 이미 초기화되어 있으므로 clear()를 사용
+        entity.getAddresses().clear();
+        entity.getBrandPreferences().clear();
+        entity.getCategoryInterests().clear();
+
+        // when
+        CustomerProfile profile = mapper.toDomain(entity);
+
+        // then
+        assertThat(profile).isNotNull();
+        assertThat(profile.getPreferences().getBrandPreferences()).isEmpty();
+        assertThat(profile.getPreferences().getCategoryInterests()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("null 컬렉션을 가진 엔티티를 도메인으로 변환한다")
+    void toDomain_ShouldHandleNullCollections() {
+        // given
+        CustomerProfileEntity entity = CustomerProfileEntity.builder()
+                .customerId(123L)
+                .firstName("John")
+                .lastName("Doe")
+                .primaryPhone("01012345678")
+                .status(CustomerProfileEntity.ProfileStatus.ACTIVE)
+                .emailMarketingConsent(false)
+                .smsMarketingConsent(false)
+                .pushMarketingConsent(false)
+                .orderNotifications(true)
+                .promotionNotifications(false)
+                .accountNotifications(true)
+                .reviewNotifications(false)
+                .build();
+        
+        // 명시적으로 null 설정은 필요없음 (빌더에서 이미 null)
+
+        // when
+        CustomerProfile profile = mapper.toDomain(entity);
+
+        // then
+        assertThat(profile).isNotNull();
+        assertThat(profile.getPreferences().getBrandPreferences()).isEmpty();
+        assertThat(profile.getPreferences().getCategoryInterests()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("Gender가 OTHER인 경우를 도메인에서 엔티티로 매핑한다")
+    void shouldMapOtherGenderFromDomainToEntity() {
+        // given
+        CustomerProfile profile = createProfileWithGender(Gender.OTHER);
+
+        // when
+        CustomerProfileEntity entity = mapper.toEntity(profile);
+
+        // then
+        assertThat(entity.getGender()).isEqualTo(CustomerProfileEntity.Gender.OTHER);
+    }
+
+    @Test
+    @DisplayName("모든 BrandPreferenceLevel을 도메인으로 매핑한다")
+    void shouldMapAllBrandPreferenceLevels() {
+        // given
+        CustomerProfileEntity entity = createMinimalEntity();
+        
+        // LIKE
+        BrandPreferenceEntity likeEntity = BrandPreferenceEntity.builder()
+                .brandName("Brand1")
+                .preferenceLevel(BrandPreferenceEntity.PreferenceLevel.LIKE)
+                .build();
+        entity.getBrandPreferences().add(likeEntity);
+        
+        // DISLIKE
+        BrandPreferenceEntity dislikeEntity = BrandPreferenceEntity.builder()
+                .brandName("Brand2")
+                .preferenceLevel(BrandPreferenceEntity.PreferenceLevel.DISLIKE)
+                .build();
+        entity.getBrandPreferences().add(dislikeEntity);
+
+        // when
+        CustomerProfile profile = mapper.toDomain(entity);
+
+        // then
+        assertThat(profile.getPreferences().getBrandPreferences()).hasSize(2);
+        assertThat(profile.getPreferences().getBrandPreferences().get(0).getLevel()).isEqualTo(PreferenceLevel.LIKE);
+        assertThat(profile.getPreferences().getBrandPreferences().get(1).getLevel()).isEqualTo(PreferenceLevel.DISLIKE);
+    }
+
+    @Test
+    @DisplayName("모든 CategoryInterestLevel을 도메인으로 매핑한다")
+    void shouldMapAllCategoryInterestLevels() {
+        // given
+        CustomerProfileEntity entity = createMinimalEntity();
+        
+        // MEDIUM
+        CategoryInterestEntity mediumEntity = CategoryInterestEntity.builder()
+                .categoryName("Category1")
+                .interestLevel(CategoryInterestEntity.InterestLevel.MEDIUM)
+                .build();
+        entity.getCategoryInterests().add(mediumEntity);
+        
+        // LOW
+        CategoryInterestEntity lowEntity = CategoryInterestEntity.builder()
+                .categoryName("Category2")
+                .interestLevel(CategoryInterestEntity.InterestLevel.LOW)
+                .build();
+        entity.getCategoryInterests().add(lowEntity);
+
+        // when
+        CustomerProfile profile = mapper.toDomain(entity);
+
+        // then
+        assertThat(profile.getPreferences().getCategoryInterests()).hasSize(2);
+        assertThat(profile.getPreferences().getCategoryInterests().get(0).getLevel()).isEqualTo(InterestLevel.MEDIUM);
+        assertThat(profile.getPreferences().getCategoryInterests().get(1).getLevel()).isEqualTo(InterestLevel.LOW);
+    }
+
+    @Test
+    @DisplayName("모든 AddressType을 도메인으로 매핑한다")
+    void shouldMapAllAddressTypes() {
+        // given
+        CustomerProfileEntity entity = createMinimalEntity();
+        
+        // WORK
+        AddressEntity workEntity = AddressEntity.builder()
+                .type(AddressEntity.AddressType.WORK)
+                .alias("회사")
+                .zipCode("12345")
+                .roadAddress("도로명 주소")
+                .build();
+        entity.getAddresses().add(workEntity);
+        
+        // OTHER
+        AddressEntity otherEntity = AddressEntity.builder()
+                .type(AddressEntity.AddressType.OTHER)
+                .alias("기타")
+                .zipCode("67890")
+                .roadAddress("기타 도로명 주소")
+                .build();
+        entity.getAddresses().add(otherEntity);
+
+        // when
+        CustomerProfile profile = mapper.toDomain(entity);
+
+        // then
+        // Address mapping is handled but not stored in preferences
+        assertThat(profile).isNotNull();
     }
 
     // Helper methods
@@ -412,9 +621,4 @@ class CustomerProfileMapperTest {
         );
     }
 
-    private CustomerProfile createProfileWithStatus(ProfileStatus status) {
-        CustomerProfile profile = createMinimalProfile();
-        // Status is set during creation and can be updated through domain methods
-        return profile;
-    }
 }
