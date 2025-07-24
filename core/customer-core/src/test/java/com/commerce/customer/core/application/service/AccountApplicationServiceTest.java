@@ -12,6 +12,10 @@ import com.commerce.customer.core.domain.repository.AccountRepository;
 import com.commerce.customer.core.domain.service.AccountDomainService;
 import com.commerce.customer.core.domain.service.PasswordEncoder;
 import com.commerce.customer.core.domain.service.jwt.JwtTokenService;
+import com.commerce.customer.core.domain.event.DomainEventPublisher;
+import com.commerce.customer.core.domain.event.AccountCreatedEvent;
+import com.commerce.customer.core.domain.event.AccountActivatedEvent;
+import com.commerce.customer.core.application.usecase.account.ActivateAccountUseCase;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -22,6 +26,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -30,6 +35,8 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.times;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("AccountApplicationService 테스트")
@@ -46,6 +53,9 @@ class AccountApplicationServiceTest {
 
     @Mock
     private PasswordEncoder passwordEncoder;
+
+    @Mock
+    private DomainEventPublisher domainEventPublisher;
 
     @InjectMocks
     private AccountApplicationService accountApplicationService;
@@ -69,10 +79,13 @@ class AccountApplicationServiceTest {
     @DisplayName("계정 생성 성공")
     void createAccount_Success() {
         // given
+        String activationCode = "ACTIVATION123";
+        AccountCreatedEvent event = new AccountCreatedEvent(accountId, customerId, email, activationCode);
         given(accountRepository.generateCustomerId()).willReturn(customerId);
         given(accountDomainService.createAccount(any(CustomerId.class), any(Email.class), any(Password.class), any(PasswordEncoder.class)))
                 .willReturn(account);
         given(account.getAccountId()).willReturn(accountId);
+        given(account.getDomainEvents()).willReturn(List.of(event));
 
         // when
         AccountId result = accountApplicationService.createAccount(email, password);
@@ -81,6 +94,9 @@ class AccountApplicationServiceTest {
         assertThat(result).isEqualTo(accountId);
         then(accountRepository).should().generateCustomerId();
         then(accountDomainService).should().createAccount(any(CustomerId.class), any(Email.class), any(Password.class), any(PasswordEncoder.class));
+        then(account).should().raiseAccountCreatedEvent();
+        then(domainEventPublisher).should().publishAccountCreatedEvent(event);
+        then(account).should().clearDomainEvents();
     }
 
     @Test
@@ -210,6 +226,67 @@ class AccountApplicationServiceTest {
 
         // when & then
         assertThatThrownBy(() -> accountApplicationService.getAccount(accountId))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("계정을 찾을 수 없습니다.");
+    }
+    
+    @Test
+    @DisplayName("이메일로 계정 조회 성공")
+    void getAccountByEmail_Success() {
+        // given
+        given(accountRepository.findByEmail(email)).willReturn(Optional.of(account));
+
+        // when
+        Account result = accountApplicationService.getAccountByEmail(email);
+
+        // then
+        assertThat(result).isEqualTo(account);
+        then(accountRepository).should().findByEmail(email);
+    }
+
+    @Test
+    @DisplayName("이메일로 계정 조회 실패 - 존재하지 않는 계정")
+    void getAccountByEmail_NotFound() {
+        // given
+        given(accountRepository.findByEmail(email)).willReturn(Optional.empty());
+
+        // when & then
+        assertThatThrownBy(() -> accountApplicationService.getAccountByEmail(email))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("계정을 찾을 수 없습니다.");
+    }
+    
+    @Test
+    @DisplayName("계정 활성화 성공")
+    void activateAccount_Success() {
+        // given
+        String activationCode = "ACTIVATION123";
+        ActivateAccountUseCase useCase = new ActivateAccountUseCase(accountId, activationCode);
+        AccountActivatedEvent event = AccountActivatedEvent.of(accountId, customerId);
+        
+        given(accountRepository.findById(accountId)).willReturn(Optional.of(account));
+        given(account.getDomainEvents()).willReturn(List.of(event));
+
+        // when
+        accountApplicationService.activateAccount(useCase);
+
+        // then
+        then(account).should().activate(activationCode);
+        then(accountRepository).should().save(account);
+        then(domainEventPublisher).should().publishAccountActivatedEvent(event);
+        then(account).should().clearDomainEvents();
+    }
+    
+    @Test
+    @DisplayName("계정 활성화 실패 - 존재하지 않는 계정")
+    void activateAccount_NotFound() {
+        // given
+        ActivateAccountUseCase useCase = new ActivateAccountUseCase(accountId, "any-activation-code");
+        
+        given(accountRepository.findById(accountId)).willReturn(Optional.empty());
+
+        // when & then
+        assertThatThrownBy(() -> accountApplicationService.activateAccount(useCase))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("계정을 찾을 수 없습니다.");
     }

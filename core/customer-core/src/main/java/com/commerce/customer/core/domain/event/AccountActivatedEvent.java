@@ -17,4 +17,8 @@ public class AccountActivatedEvent {
         this.customerId = customerId;
         this.occurredAt = LocalDateTime.now();
     }
+    
+    public static AccountActivatedEvent of(AccountId accountId, CustomerId customerId) {
+        return new AccountActivatedEvent(accountId, customerId);
+    }
 }
