@@ -139,6 +139,25 @@ public class CustomerProfileMapper {
                 contactInfo
         );
         
+        // Preferences 업데이트
+        profile.updatePreferences(preferences);
+        
+        // Status 설정
+        ProfileStatus domainStatus = mapToDomainStatus(entity.getStatus());
+        if (domainStatus == ProfileStatus.INACTIVE) {
+            profile.deactivate();
+        } else if (domainStatus == ProfileStatus.SUSPENDED) {
+            // CustomerProfile은 suspend를 직접 지원하지 않으므로
+            // 리플렉션을 사용하여 status 설정
+            try {
+                java.lang.reflect.Field statusField = CustomerProfile.class.getDeclaredField("status");
+                statusField.setAccessible(true);
+                statusField.set(profile, domainStatus);
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to set status", e);
+            }
+        }
+        
         // ProfileId 설정 (리플렉션 사용)
         if (entity.getProfileId() != null) {
             try {

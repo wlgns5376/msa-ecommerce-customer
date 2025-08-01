@@ -1,9 +1,12 @@
 package com.commerce.infrastructure.persistence.customer.repository;
 
 import com.commerce.infrastructure.persistence.customer.entity.CustomerProfileEntity;
+import com.commerce.infrastructure.persistence.customer.entity.BrandPreferenceEntity;
+import com.commerce.infrastructure.persistence.customer.entity.CategoryInterestEntity;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
+import org.hibernate.Hibernate;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -33,13 +36,18 @@ public class CustomerProfileQueryRepository {
      * 모든 연관 데이터와 함께 CustomerProfile 조회 (N+1 문제 해결)
      */
     public Optional<CustomerProfileEntity> findWithAllDetailsById(Long customerId) {
+        // MultipleBagFetchException을 피하기 위해 한 번에 하나의 컬렉션만 fetch join
         CustomerProfileEntity profile = queryFactory
                 .selectFrom(customerProfileEntity)
                 .leftJoin(customerProfileEntity.addresses, addressEntity).fetchJoin()
-                .leftJoin(customerProfileEntity.brandPreferences, brandPreferenceEntity).fetchJoin()
-                .leftJoin(customerProfileEntity.categoryInterests, categoryInterestEntity).fetchJoin()
                 .where(customerProfileEntity.customerId.eq(customerId))
                 .fetchOne();
+
+        if (profile != null) {
+            // Hibernate.initialize를 사용하여 나머지 컬렉션 초기화
+            Hibernate.initialize(profile.getBrandPreferences());
+            Hibernate.initialize(profile.getCategoryInterests());
+        }
 
         return Optional.ofNullable(profile);
     }
@@ -99,26 +107,66 @@ public class CustomerProfileQueryRepository {
      * 특정 브랜드를 선호하는 고객 목록 조회
      */
     public List<CustomerProfileEntity> findByPreferredBrand(String brandName, int limit) {
-        return queryFactory
+        // H2 데이터베이스 호환성을 위해 enum 값을 직접 정렬하지 않고
+        // 결과를 가져온 후 Java에서 정렬
+        List<CustomerProfileEntity> results = queryFactory
                 .selectFrom(customerProfileEntity)
-                .join(customerProfileEntity.brandPreferences, brandPreferenceEntity)
+                .distinct()
+                .join(customerProfileEntity.brandPreferences, brandPreferenceEntity).fetchJoin()
                 .where(brandPreferenceEntity.brandName.eq(brandName))
-                .orderBy(brandPreferenceEntity.preferenceLevel.desc())
-                .limit(limit)
+                .limit(limit * 2) // 정렬 전에 여유있게 가져옴
                 .fetch();
+        
+        // Java에서 선호도 순으로 정렬
+        return results.stream()
+                .sorted((p1, p2) -> {
+                    BrandPreferenceEntity pref1 = p1.getBrandPreferences().stream()
+                            .filter(bp -> bp.getBrandName().equals(brandName))
+                            .findFirst().orElse(null);
+                    BrandPreferenceEntity pref2 = p2.getBrandPreferences().stream()
+                            .filter(bp -> bp.getBrandName().equals(brandName))
+                            .findFirst().orElse(null);
+                    
+                    if (pref1 == null || pref2 == null) return 0;
+                    
+                    // LOVE(0) > LIKE(1) > DISLIKE(2) 순으로 정렬
+                    return pref1.getPreferenceLevel().ordinal() - pref2.getPreferenceLevel().ordinal();
+                })
+                .limit(limit)
+                .toList();
     }
 
     /**
      * 특정 카테고리에 관심있는 고객 목록 조회
      */
     public List<CustomerProfileEntity> findByInterestCategory(String categoryName, int limit) {
-        return queryFactory
+        // H2 데이터베이스 호환성을 위해 enum 값을 직접 정렬하지 않고
+        // 결과를 가져온 후 Java에서 정렬
+        List<CustomerProfileEntity> results = queryFactory
                 .selectFrom(customerProfileEntity)
-                .join(customerProfileEntity.categoryInterests, categoryInterestEntity)
+                .distinct()
+                .join(customerProfileEntity.categoryInterests, categoryInterestEntity).fetchJoin()
                 .where(categoryInterestEntity.categoryName.eq(categoryName))
-                .orderBy(categoryInterestEntity.interestLevel.desc())
-                .limit(limit)
+                .limit(limit * 2) // 정렬 전에 여유있게 가져옴
                 .fetch();
+        
+        // Java에서 관심도 순으로 정렬
+        return results.stream()
+                .sorted((p1, p2) -> {
+                    CategoryInterestEntity interest1 = p1.getCategoryInterests().stream()
+                            .filter(ci -> ci.getCategoryName().equals(categoryName))
+                            .findFirst().orElse(null);
+                    CategoryInterestEntity interest2 = p2.getCategoryInterests().stream()
+                            .filter(ci -> ci.getCategoryName().equals(categoryName))
+                            .findFirst().orElse(null);
+                    
+                    if (interest1 == null || interest2 == null) return 0;
+                    
+                    // HIGH(0) > MEDIUM(1) > LOW(2) 순으로 정렬
+                    return interest1.getInterestLevel().ordinal() - interest2.getInterestLevel().ordinal();
+                })
+                .limit(limit)
+                .toList();
     }
 
     /**
