@@ -110,7 +110,7 @@ public class CustomerProfileQueryRepository {
                 .distinct()
                 .join(customerProfileEntity.brandPreferences, brandPreferenceEntity)
                 .where(brandPreferenceEntity.brandName.eq(brandName))
-                .orderBy(brandPreferenceEntity.preferenceLevel.desc())
+                .orderBy(brandPreferenceEntity.preferenceLevel.stringValue().desc())
                 .limit(limit)
                 .fetch();
     }
@@ -124,7 +124,7 @@ public class CustomerProfileQueryRepository {
                 .distinct()
                 .join(customerProfileEntity.categoryInterests, categoryInterestEntity)
                 .where(categoryInterestEntity.categoryName.eq(categoryName))
-                .orderBy(categoryInterestEntity.interestLevel.desc())
+                .orderBy(categoryInterestEntity.interestLevel.stringValue().desc())
                 .limit(limit)
                 .fetch();
     }
