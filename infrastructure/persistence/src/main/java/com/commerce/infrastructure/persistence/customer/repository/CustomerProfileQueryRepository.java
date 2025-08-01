@@ -107,40 +107,66 @@ public class CustomerProfileQueryRepository {
      * 특정 브랜드를 선호하는 고객 목록 조회
      */
     public List<CustomerProfileEntity> findByPreferredBrand(String brandName, int limit) {
-        return queryFactory
+        // H2 데이터베이스 호환성을 위해 enum 값을 직접 정렬하지 않고
+        // 결과를 가져온 후 Java에서 정렬
+        List<CustomerProfileEntity> results = queryFactory
                 .selectFrom(customerProfileEntity)
                 .distinct()
-                .join(customerProfileEntity.brandPreferences, brandPreferenceEntity)
+                .join(customerProfileEntity.brandPreferences, brandPreferenceEntity).fetchJoin()
                 .where(brandPreferenceEntity.brandName.eq(brandName))
-                .orderBy(
-                    brandPreferenceEntity.preferenceLevel
-                        .when(BrandPreferenceEntity.PreferenceLevel.LOVE).then(3)
-                        .when(BrandPreferenceEntity.PreferenceLevel.LIKE).then(2)
-                        .when(BrandPreferenceEntity.PreferenceLevel.DISLIKE).then(1)
-                        .otherwise(0).desc()
-                )
-                .limit(limit)
+                .limit(limit * 2) // 정렬 전에 여유있게 가져옴
                 .fetch();
+        
+        // Java에서 선호도 순으로 정렬
+        return results.stream()
+                .sorted((p1, p2) -> {
+                    BrandPreferenceEntity pref1 = p1.getBrandPreferences().stream()
+                            .filter(bp -> bp.getBrandName().equals(brandName))
+                            .findFirst().orElse(null);
+                    BrandPreferenceEntity pref2 = p2.getBrandPreferences().stream()
+                            .filter(bp -> bp.getBrandName().equals(brandName))
+                            .findFirst().orElse(null);
+                    
+                    if (pref1 == null || pref2 == null) return 0;
+                    
+                    // LOVE(0) > LIKE(1) > DISLIKE(2) 순으로 정렬
+                    return pref1.getPreferenceLevel().ordinal() - pref2.getPreferenceLevel().ordinal();
+                })
+                .limit(limit)
+                .toList();
     }
 
     /**
      * 특정 카테고리에 관심있는 고객 목록 조회
      */
     public List<CustomerProfileEntity> findByInterestCategory(String categoryName, int limit) {
-        return queryFactory
+        // H2 데이터베이스 호환성을 위해 enum 값을 직접 정렬하지 않고
+        // 결과를 가져온 후 Java에서 정렬
+        List<CustomerProfileEntity> results = queryFactory
                 .selectFrom(customerProfileEntity)
                 .distinct()
-                .join(customerProfileEntity.categoryInterests, categoryInterestEntity)
+                .join(customerProfileEntity.categoryInterests, categoryInterestEntity).fetchJoin()
                 .where(categoryInterestEntity.categoryName.eq(categoryName))
-                .orderBy(
-                    categoryInterestEntity.interestLevel
-                        .when(CategoryInterestEntity.InterestLevel.HIGH).then(3)
-                        .when(CategoryInterestEntity.InterestLevel.MEDIUM).then(2)
-                        .when(CategoryInterestEntity.InterestLevel.LOW).then(1)
-                        .otherwise(0).desc()
-                )
-                .limit(limit)
+                .limit(limit * 2) // 정렬 전에 여유있게 가져옴
                 .fetch();
+        
+        // Java에서 관심도 순으로 정렬
+        return results.stream()
+                .sorted((p1, p2) -> {
+                    CategoryInterestEntity interest1 = p1.getCategoryInterests().stream()
+                            .filter(ci -> ci.getCategoryName().equals(categoryName))
+                            .findFirst().orElse(null);
+                    CategoryInterestEntity interest2 = p2.getCategoryInterests().stream()
+                            .filter(ci -> ci.getCategoryName().equals(categoryName))
+                            .findFirst().orElse(null);
+                    
+                    if (interest1 == null || interest2 == null) return 0;
+                    
+                    // HIGH(0) > MEDIUM(1) > LOW(2) 순으로 정렬
+                    return interest1.getInterestLevel().ordinal() - interest2.getInterestLevel().ordinal();
+                })
+                .limit(limit)
+                .toList();
     }
 
     /**
