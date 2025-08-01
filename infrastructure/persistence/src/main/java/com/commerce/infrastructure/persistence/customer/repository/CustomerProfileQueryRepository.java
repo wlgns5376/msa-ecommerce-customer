@@ -1,6 +1,8 @@
 package com.commerce.infrastructure.persistence.customer.repository;
 
 import com.commerce.infrastructure.persistence.customer.entity.CustomerProfileEntity;
+import com.commerce.infrastructure.persistence.customer.entity.BrandPreferenceEntity;
+import com.commerce.infrastructure.persistence.customer.entity.CategoryInterestEntity;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
