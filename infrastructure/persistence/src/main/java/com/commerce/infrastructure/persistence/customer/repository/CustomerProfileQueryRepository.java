@@ -4,6 +4,7 @@ import com.commerce.infrastructure.persistence.customer.entity.CustomerProfileEn
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
+import org.hibernate.Hibernate;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -41,18 +42,9 @@ public class CustomerProfileQueryRepository {
                 .fetchOne();
 
         if (profile != null) {
-            // brandPreferences와 categoryInterests는 별도 쿼리로 로드
-            queryFactory
-                    .selectFrom(customerProfileEntity)
-                    .leftJoin(customerProfileEntity.brandPreferences, brandPreferenceEntity).fetchJoin()
-                    .where(customerProfileEntity.eq(profile))
-                    .fetchOne();
-
-            queryFactory
-                    .selectFrom(customerProfileEntity)
-                    .leftJoin(customerProfileEntity.categoryInterests, categoryInterestEntity).fetchJoin()
-                    .where(customerProfileEntity.eq(profile))
-                    .fetchOne();
+            // Hibernate.initialize를 사용하여 나머지 컬렉션 초기화
+            Hibernate.initialize(profile.getBrandPreferences());
+            Hibernate.initialize(profile.getCategoryInterests());
         }
 
         return Optional.ofNullable(profile);
