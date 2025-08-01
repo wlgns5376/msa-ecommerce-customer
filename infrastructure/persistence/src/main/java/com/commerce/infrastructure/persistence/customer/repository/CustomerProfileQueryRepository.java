@@ -110,7 +110,13 @@ public class CustomerProfileQueryRepository {
                 .distinct()
                 .join(customerProfileEntity.brandPreferences, brandPreferenceEntity)
                 .where(brandPreferenceEntity.brandName.eq(brandName))
-                .orderBy(brandPreferenceEntity.preferenceLevel.stringValue().desc())
+                .orderBy(
+                    brandPreferenceEntity.preferenceLevel
+                        .when(BrandPreferenceEntity.PreferenceLevel.LOVE).then(3)
+                        .when(BrandPreferenceEntity.PreferenceLevel.LIKE).then(2)
+                        .when(BrandPreferenceEntity.PreferenceLevel.DISLIKE).then(1)
+                        .otherwise(0).desc()
+                )
                 .limit(limit)
                 .fetch();
     }
@@ -124,7 +130,13 @@ public class CustomerProfileQueryRepository {
                 .distinct()
                 .join(customerProfileEntity.categoryInterests, categoryInterestEntity)
                 .where(categoryInterestEntity.categoryName.eq(categoryName))
-                .orderBy(categoryInterestEntity.interestLevel.stringValue().desc())
+                .orderBy(
+                    categoryInterestEntity.interestLevel
+                        .when(CategoryInterestEntity.InterestLevel.HIGH).then(3)
+                        .when(CategoryInterestEntity.InterestLevel.MEDIUM).then(2)
+                        .when(CategoryInterestEntity.InterestLevel.LOW).then(1)
+                        .otherwise(0).desc()
+                )
                 .limit(limit)
                 .fetch();
     }
