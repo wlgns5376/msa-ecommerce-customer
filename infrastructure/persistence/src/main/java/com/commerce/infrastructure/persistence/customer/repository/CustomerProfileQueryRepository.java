@@ -33,13 +33,27 @@ public class CustomerProfileQueryRepository {
      * 모든 연관 데이터와 함께 CustomerProfile 조회 (N+1 문제 해결)
      */
     public Optional<CustomerProfileEntity> findWithAllDetailsById(Long customerId) {
+        // MultipleBagFetchException을 피하기 위해 한 번에 하나의 컬렉션만 fetch join
         CustomerProfileEntity profile = queryFactory
                 .selectFrom(customerProfileEntity)
                 .leftJoin(customerProfileEntity.addresses, addressEntity).fetchJoin()
-                .leftJoin(customerProfileEntity.brandPreferences, brandPreferenceEntity).fetchJoin()
-                .leftJoin(customerProfileEntity.categoryInterests, categoryInterestEntity).fetchJoin()
                 .where(customerProfileEntity.customerId.eq(customerId))
                 .fetchOne();
+
+        if (profile != null) {
+            // brandPreferences와 categoryInterests는 별도 쿼리로 로드
+            queryFactory
+                    .selectFrom(customerProfileEntity)
+                    .leftJoin(customerProfileEntity.brandPreferences, brandPreferenceEntity).fetchJoin()
+                    .where(customerProfileEntity.eq(profile))
+                    .fetchOne();
+
+            queryFactory
+                    .selectFrom(customerProfileEntity)
+                    .leftJoin(customerProfileEntity.categoryInterests, categoryInterestEntity).fetchJoin()
+                    .where(customerProfileEntity.eq(profile))
+                    .fetchOne();
+        }
 
         return Optional.ofNullable(profile);
     }
@@ -101,6 +115,7 @@ public class CustomerProfileQueryRepository {
     public List<CustomerProfileEntity> findByPreferredBrand(String brandName, int limit) {
         return queryFactory
                 .selectFrom(customerProfileEntity)
+                .distinct()
                 .join(customerProfileEntity.brandPreferences, brandPreferenceEntity)
                 .where(brandPreferenceEntity.brandName.eq(brandName))
                 .orderBy(brandPreferenceEntity.preferenceLevel.desc())
@@ -114,6 +129,7 @@ public class CustomerProfileQueryRepository {
     public List<CustomerProfileEntity> findByInterestCategory(String categoryName, int limit) {
         return queryFactory
                 .selectFrom(customerProfileEntity)
+                .distinct()
                 .join(customerProfileEntity.categoryInterests, categoryInterestEntity)
                 .where(categoryInterestEntity.categoryName.eq(categoryName))
                 .orderBy(categoryInterestEntity.interestLevel.desc())
