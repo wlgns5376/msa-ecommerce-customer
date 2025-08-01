@@ -355,6 +355,13 @@ class CustomerProfileQueryRepositoryIntegrationTest {
             .gender(gender)
             .status(status)
             .primaryPhone("010-1234-567" + customerId)
+            .emailMarketingConsent(false)
+            .smsMarketingConsent(false)
+            .pushMarketingConsent(false)
+            .orderNotifications(true)
+            .promotionNotifications(false)
+            .accountNotifications(true)
+            .reviewNotifications(false)
             .build();
         
         return jpaRepository.save(profile);
