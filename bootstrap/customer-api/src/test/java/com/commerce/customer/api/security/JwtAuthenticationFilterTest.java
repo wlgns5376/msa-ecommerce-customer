@@ -19,8 +19,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -79,8 +81,15 @@ class JwtAuthenticationFilterTest {
             given(jwtTokenService.isTokenBlacklisted(jwtToken)).willReturn(false);
             given(jwtClaims.getEmail()).willReturn(EMAIL);
 
-            // When
-            jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
+            // When - Using reflection to call protected method
+            try {
+                Method doFilterInternal = JwtAuthenticationFilter.class.getDeclaredMethod(
+                    "doFilterInternal", HttpServletRequest.class, HttpServletResponse.class, FilterChain.class);
+                doFilterInternal.setAccessible(true);
+                doFilterInternal.invoke(jwtAuthenticationFilter, request, response, filterChain);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
 
             // Then
             then(jwtTokenService).should().parseToken(VALID_TOKEN);
@@ -97,8 +106,15 @@ class JwtAuthenticationFilterTest {
             // Given
             given(request.getHeader("Authorization")).willReturn(null);
 
-            // When
-            jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
+            // When - Using reflection to call protected method
+            try {
+                Method doFilterInternal = JwtAuthenticationFilter.class.getDeclaredMethod(
+                    "doFilterInternal", HttpServletRequest.class, HttpServletResponse.class, FilterChain.class);
+                doFilterInternal.setAccessible(true);
+                doFilterInternal.invoke(jwtAuthenticationFilter, request, response, filterChain);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
 
             // Then
             then(jwtTokenService).should(never()).parseToken(anyString());
@@ -111,8 +127,15 @@ class JwtAuthenticationFilterTest {
             // Given
             given(request.getHeader("Authorization")).willReturn(VALID_TOKEN);
 
-            // When
-            jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
+            // When - Using reflection to call protected method
+            try {
+                Method doFilterInternal = JwtAuthenticationFilter.class.getDeclaredMethod(
+                    "doFilterInternal", HttpServletRequest.class, HttpServletResponse.class, FilterChain.class);
+                doFilterInternal.setAccessible(true);
+                doFilterInternal.invoke(jwtAuthenticationFilter, request, response, filterChain);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
 
             // Then
             then(jwtTokenService).should(never()).parseToken(anyString());
@@ -127,8 +150,15 @@ class JwtAuthenticationFilterTest {
             given(request.getHeader("Authorization")).willReturn(BEARER_TOKEN);
             given(securityContext.getAuthentication()).willReturn(existingAuth);
 
-            // When
-            jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
+            // When - Using reflection to call protected method
+            try {
+                Method doFilterInternal = JwtAuthenticationFilter.class.getDeclaredMethod(
+                    "doFilterInternal", HttpServletRequest.class, HttpServletResponse.class, FilterChain.class);
+                doFilterInternal.setAccessible(true);
+                doFilterInternal.invoke(jwtAuthenticationFilter, request, response, filterChain);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
 
             // Then
             then(jwtTokenService).should(never()).parseToken(anyString());
@@ -143,8 +173,15 @@ class JwtAuthenticationFilterTest {
             given(securityContext.getAuthentication()).willReturn(null);
             given(jwtTokenService.parseToken(VALID_TOKEN)).willReturn(Optional.empty());
 
-            // When
-            jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
+            // When - Using reflection to call protected method
+            try {
+                Method doFilterInternal = JwtAuthenticationFilter.class.getDeclaredMethod(
+                    "doFilterInternal", HttpServletRequest.class, HttpServletResponse.class, FilterChain.class);
+                doFilterInternal.setAccessible(true);
+                doFilterInternal.invoke(jwtAuthenticationFilter, request, response, filterChain);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
 
             // Then
             then(jwtTokenService).should().parseToken(VALID_TOKEN);
@@ -164,8 +201,15 @@ class JwtAuthenticationFilterTest {
             given(jwtTokenService.parseToken(VALID_TOKEN)).willReturn(Optional.of(jwtToken));
             given(jwtTokenService.validateToken(jwtToken)).willReturn(Optional.empty());
 
-            // When
-            jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
+            // When - Using reflection to call protected method
+            try {
+                Method doFilterInternal = JwtAuthenticationFilter.class.getDeclaredMethod(
+                    "doFilterInternal", HttpServletRequest.class, HttpServletResponse.class, FilterChain.class);
+                doFilterInternal.setAccessible(true);
+                doFilterInternal.invoke(jwtAuthenticationFilter, request, response, filterChain);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
 
             // Then
             then(jwtTokenService).should().parseToken(VALID_TOKEN);
@@ -188,8 +232,15 @@ class JwtAuthenticationFilterTest {
             given(jwtTokenService.validateToken(jwtToken)).willReturn(Optional.of(jwtClaims));
             given(jwtTokenService.isTokenBlacklisted(jwtToken)).willReturn(true);
 
-            // When
-            jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
+            // When - Using reflection to call protected method
+            try {
+                Method doFilterInternal = JwtAuthenticationFilter.class.getDeclaredMethod(
+                    "doFilterInternal", HttpServletRequest.class, HttpServletResponse.class, FilterChain.class);
+                doFilterInternal.setAccessible(true);
+                doFilterInternal.invoke(jwtAuthenticationFilter, request, response, filterChain);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
 
             // Then
             then(jwtTokenService).should().parseToken(VALID_TOKEN);
@@ -207,8 +258,15 @@ class JwtAuthenticationFilterTest {
             given(securityContext.getAuthentication()).willReturn(null);
             given(jwtTokenService.parseToken(VALID_TOKEN)).willThrow(new RuntimeException("JWT 처리 오류"));
 
-            // When
-            jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
+            // When - Using reflection to call protected method
+            try {
+                Method doFilterInternal = JwtAuthenticationFilter.class.getDeclaredMethod(
+                    "doFilterInternal", HttpServletRequest.class, HttpServletResponse.class, FilterChain.class);
+                doFilterInternal.setAccessible(true);
+                doFilterInternal.invoke(jwtAuthenticationFilter, request, response, filterChain);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
 
             // Then
             then(jwtTokenService).should().parseToken(VALID_TOKEN);
@@ -228,8 +286,16 @@ class JwtAuthenticationFilterTest {
             given(request.getRequestURI()).willReturn("/api/v1/accounts");
             given(request.getMethod()).willReturn("POST");
 
-            // When
-            boolean result = jwtAuthenticationFilter.shouldNotFilter(request);
+            // When - Using reflection to call protected method
+            boolean result;
+            try {
+                Method shouldNotFilter = OncePerRequestFilter.class.getDeclaredMethod(
+                    "shouldNotFilter", HttpServletRequest.class);
+                shouldNotFilter.setAccessible(true);
+                result = (boolean) shouldNotFilter.invoke(jwtAuthenticationFilter, request);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
 
             // Then
             assertThat(result).isTrue();
@@ -241,8 +307,16 @@ class JwtAuthenticationFilterTest {
             // Given
             given(request.getRequestURI()).willReturn("/api/v1/accounts/login");
 
-            // When
-            boolean result = jwtAuthenticationFilter.shouldNotFilter(request);
+            // When - Using reflection to call protected method
+            boolean result;
+            try {
+                Method shouldNotFilter = OncePerRequestFilter.class.getDeclaredMethod(
+                    "shouldNotFilter", HttpServletRequest.class);
+                shouldNotFilter.setAccessible(true);
+                result = (boolean) shouldNotFilter.invoke(jwtAuthenticationFilter, request);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
 
             // Then
             assertThat(result).isTrue();
@@ -254,8 +328,16 @@ class JwtAuthenticationFilterTest {
             // Given
             given(request.getRequestURI()).willReturn("/api/v1/accounts/refresh");
 
-            // When
-            boolean result = jwtAuthenticationFilter.shouldNotFilter(request);
+            // When - Using reflection to call protected method
+            boolean result;
+            try {
+                Method shouldNotFilter = OncePerRequestFilter.class.getDeclaredMethod(
+                    "shouldNotFilter", HttpServletRequest.class);
+                shouldNotFilter.setAccessible(true);
+                result = (boolean) shouldNotFilter.invoke(jwtAuthenticationFilter, request);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
 
             // Then
             assertThat(result).isTrue();
@@ -267,8 +349,16 @@ class JwtAuthenticationFilterTest {
             // Given
             given(request.getRequestURI()).willReturn("/swagger-ui/index.html");
 
-            // When
-            boolean result = jwtAuthenticationFilter.shouldNotFilter(request);
+            // When - Using reflection to call protected method
+            boolean result;
+            try {
+                Method shouldNotFilter = OncePerRequestFilter.class.getDeclaredMethod(
+                    "shouldNotFilter", HttpServletRequest.class);
+                shouldNotFilter.setAccessible(true);
+                result = (boolean) shouldNotFilter.invoke(jwtAuthenticationFilter, request);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
 
             // Then
             assertThat(result).isTrue();
@@ -280,8 +370,16 @@ class JwtAuthenticationFilterTest {
             // Given
             given(request.getRequestURI()).willReturn("/v3/api-docs/swagger-config");
 
-            // When
-            boolean result = jwtAuthenticationFilter.shouldNotFilter(request);
+            // When - Using reflection to call protected method
+            boolean result;
+            try {
+                Method shouldNotFilter = OncePerRequestFilter.class.getDeclaredMethod(
+                    "shouldNotFilter", HttpServletRequest.class);
+                shouldNotFilter.setAccessible(true);
+                result = (boolean) shouldNotFilter.invoke(jwtAuthenticationFilter, request);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
 
             // Then
             assertThat(result).isTrue();
@@ -293,8 +391,16 @@ class JwtAuthenticationFilterTest {
             // Given
             given(request.getRequestURI()).willReturn("/actuator/health");
 
-            // When
-            boolean result = jwtAuthenticationFilter.shouldNotFilter(request);
+            // When - Using reflection to call protected method
+            boolean result;
+            try {
+                Method shouldNotFilter = OncePerRequestFilter.class.getDeclaredMethod(
+                    "shouldNotFilter", HttpServletRequest.class);
+                shouldNotFilter.setAccessible(true);
+                result = (boolean) shouldNotFilter.invoke(jwtAuthenticationFilter, request);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
 
             // Then
             assertThat(result).isTrue();
@@ -307,8 +413,16 @@ class JwtAuthenticationFilterTest {
             given(request.getRequestURI()).willReturn("/api/v1/profiles");
             given(request.getMethod()).willReturn("GET");
 
-            // When
-            boolean result = jwtAuthenticationFilter.shouldNotFilter(request);
+            // When - Using reflection to call protected method
+            boolean result;
+            try {
+                Method shouldNotFilter = OncePerRequestFilter.class.getDeclaredMethod(
+                    "shouldNotFilter", HttpServletRequest.class);
+                shouldNotFilter.setAccessible(true);
+                result = (boolean) shouldNotFilter.invoke(jwtAuthenticationFilter, request);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
 
             // Then
             assertThat(result).isFalse();
@@ -321,8 +435,16 @@ class JwtAuthenticationFilterTest {
             given(request.getRequestURI()).willReturn("/api/v1/accounts");
             given(request.getMethod()).willReturn("GET");
 
-            // When
-            boolean result = jwtAuthenticationFilter.shouldNotFilter(request);
+            // When - Using reflection to call protected method
+            boolean result;
+            try {
+                Method shouldNotFilter = OncePerRequestFilter.class.getDeclaredMethod(
+                    "shouldNotFilter", HttpServletRequest.class);
+                shouldNotFilter.setAccessible(true);
+                result = (boolean) shouldNotFilter.invoke(jwtAuthenticationFilter, request);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
 
             // Then
             assertThat(result).isFalse();

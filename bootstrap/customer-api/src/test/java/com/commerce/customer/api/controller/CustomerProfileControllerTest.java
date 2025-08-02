@@ -420,8 +420,17 @@ class CustomerProfileControllerTest {
         );
         
         ProfilePreferences preferences = ProfilePreferences.of(
-            MarketingConsent.create(true, false, true),
-            NotificationSettings.create(true, true, false, true)
+            MarketingConsent.builder()
+                .emailMarketing(true)
+                .smsMarketing(false)
+                .personalizedAds(true)
+                .build(),
+            NotificationSettings.builder()
+                .emailNotification(true)
+                .smsNotification(true)
+                .pushNotification(false)
+                .orderUpdates(true)
+                .build()
         );
         
         return CustomerProfile.create(

@@ -30,7 +30,7 @@ class SwaggerConfigTest {
     @BeforeEach
     void setUp() {
         // Given - SwaggerConfig의 openAPI 메서드를 호출하여 OpenAPI 인스턴스 생성
-        openAPI = swaggerConfig.openAPI();
+        openAPI = swaggerConfig.customOpenAPI();
     }
 
     @Test
@@ -154,7 +154,7 @@ class SwaggerConfigTest {
     void shouldBeAbleToCreateAsBean() {
         // When
         SwaggerConfig config = new SwaggerConfig();
-        OpenAPI createdApi = config.openAPI();
+        OpenAPI createdApi = config.customOpenAPI();
 
         // Then
         assertThat(config).isNotNull();
