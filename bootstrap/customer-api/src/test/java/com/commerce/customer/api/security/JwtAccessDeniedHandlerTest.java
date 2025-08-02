@@ -23,7 +23,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
@@ -67,7 +67,7 @@ class JwtAccessDeniedHandlerTest {
             String expectedJson = "{\"error\":\"access_denied\"}";
             
             given(request.getRequestURI()).willReturn(REQUEST_URI);
-            given(objectMapper.writeValueAsString(anyString())).willReturn(expectedJson);
+            given(objectMapper.writeValueAsString(any(Map.class))).willReturn(expectedJson);
 
             // When
             jwtAccessDeniedHandler.handle(request, response, exception);
@@ -201,7 +201,7 @@ class JwtAccessDeniedHandlerTest {
             // Given
             AccessDeniedException exception = new AccessDeniedException(ACCESS_DENIED_MESSAGE);
             given(request.getRequestURI()).willReturn(REQUEST_URI);
-            given(objectMapper.writeValueAsString(anyString())).willThrow(new IOException("JSON 직렬화 실패"));
+            given(objectMapper.writeValueAsString(any(Map.class))).willThrow(new IOException("JSON 직렬화 실패"));
 
             // When & Then
             org.junit.jupiter.api.Assertions.assertThrows(IOException.class, () -> {
@@ -234,7 +234,7 @@ class JwtAccessDeniedHandlerTest {
             // Given
             AccessDeniedException exception = new AccessDeniedException(ACCESS_DENIED_MESSAGE);
             given(request.getRequestURI()).willReturn(REQUEST_URI);
-            given(objectMapper.writeValueAsString(anyString())).willReturn("{}");
+            given(objectMapper.writeValueAsString(any(Map.class))).willReturn("{}");
 
             // When
             jwtAccessDeniedHandler.handle(request, response, exception);

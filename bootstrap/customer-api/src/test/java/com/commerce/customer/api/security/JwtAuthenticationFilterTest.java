@@ -81,15 +81,8 @@ class JwtAuthenticationFilterTest {
             given(jwtTokenService.isTokenBlacklisted(jwtToken)).willReturn(false);
             given(jwtClaims.getEmail()).willReturn(EMAIL);
 
-            // When - Using reflection to call protected method
-            try {
-                Method doFilterInternal = JwtAuthenticationFilter.class.getDeclaredMethod(
-                    "doFilterInternal", HttpServletRequest.class, HttpServletResponse.class, FilterChain.class);
-                doFilterInternal.setAccessible(true);
-                doFilterInternal.invoke(jwtAuthenticationFilter, request, response, filterChain);
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
+            // When
+            jwtAuthenticationFilter.doFilter(request, response, filterChain);
 
             // Then
             then(jwtTokenService).should().parseToken(VALID_TOKEN);
@@ -106,15 +99,8 @@ class JwtAuthenticationFilterTest {
             // Given
             given(request.getHeader("Authorization")).willReturn(null);
 
-            // When - Using reflection to call protected method
-            try {
-                Method doFilterInternal = JwtAuthenticationFilter.class.getDeclaredMethod(
-                    "doFilterInternal", HttpServletRequest.class, HttpServletResponse.class, FilterChain.class);
-                doFilterInternal.setAccessible(true);
-                doFilterInternal.invoke(jwtAuthenticationFilter, request, response, filterChain);
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
+            // When
+            jwtAuthenticationFilter.doFilter(request, response, filterChain);
 
             // Then
             then(jwtTokenService).should(never()).parseToken(anyString());
@@ -127,15 +113,8 @@ class JwtAuthenticationFilterTest {
             // Given
             given(request.getHeader("Authorization")).willReturn(VALID_TOKEN);
 
-            // When - Using reflection to call protected method
-            try {
-                Method doFilterInternal = JwtAuthenticationFilter.class.getDeclaredMethod(
-                    "doFilterInternal", HttpServletRequest.class, HttpServletResponse.class, FilterChain.class);
-                doFilterInternal.setAccessible(true);
-                doFilterInternal.invoke(jwtAuthenticationFilter, request, response, filterChain);
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
+            // When
+            jwtAuthenticationFilter.doFilter(request, response, filterChain);
 
             // Then
             then(jwtTokenService).should(never()).parseToken(anyString());
@@ -150,15 +129,8 @@ class JwtAuthenticationFilterTest {
             given(request.getHeader("Authorization")).willReturn(BEARER_TOKEN);
             given(securityContext.getAuthentication()).willReturn(existingAuth);
 
-            // When - Using reflection to call protected method
-            try {
-                Method doFilterInternal = JwtAuthenticationFilter.class.getDeclaredMethod(
-                    "doFilterInternal", HttpServletRequest.class, HttpServletResponse.class, FilterChain.class);
-                doFilterInternal.setAccessible(true);
-                doFilterInternal.invoke(jwtAuthenticationFilter, request, response, filterChain);
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
+            // When
+            jwtAuthenticationFilter.doFilter(request, response, filterChain);
 
             // Then
             then(jwtTokenService).should(never()).parseToken(anyString());
@@ -173,15 +145,8 @@ class JwtAuthenticationFilterTest {
             given(securityContext.getAuthentication()).willReturn(null);
             given(jwtTokenService.parseToken(VALID_TOKEN)).willReturn(Optional.empty());
 
-            // When - Using reflection to call protected method
-            try {
-                Method doFilterInternal = JwtAuthenticationFilter.class.getDeclaredMethod(
-                    "doFilterInternal", HttpServletRequest.class, HttpServletResponse.class, FilterChain.class);
-                doFilterInternal.setAccessible(true);
-                doFilterInternal.invoke(jwtAuthenticationFilter, request, response, filterChain);
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
+            // When
+            jwtAuthenticationFilter.doFilter(request, response, filterChain);
 
             // Then
             then(jwtTokenService).should().parseToken(VALID_TOKEN);
@@ -201,15 +166,8 @@ class JwtAuthenticationFilterTest {
             given(jwtTokenService.parseToken(VALID_TOKEN)).willReturn(Optional.of(jwtToken));
             given(jwtTokenService.validateToken(jwtToken)).willReturn(Optional.empty());
 
-            // When - Using reflection to call protected method
-            try {
-                Method doFilterInternal = JwtAuthenticationFilter.class.getDeclaredMethod(
-                    "doFilterInternal", HttpServletRequest.class, HttpServletResponse.class, FilterChain.class);
-                doFilterInternal.setAccessible(true);
-                doFilterInternal.invoke(jwtAuthenticationFilter, request, response, filterChain);
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
+            // When
+            jwtAuthenticationFilter.doFilter(request, response, filterChain);
 
             // Then
             then(jwtTokenService).should().parseToken(VALID_TOKEN);
@@ -232,15 +190,8 @@ class JwtAuthenticationFilterTest {
             given(jwtTokenService.validateToken(jwtToken)).willReturn(Optional.of(jwtClaims));
             given(jwtTokenService.isTokenBlacklisted(jwtToken)).willReturn(true);
 
-            // When - Using reflection to call protected method
-            try {
-                Method doFilterInternal = JwtAuthenticationFilter.class.getDeclaredMethod(
-                    "doFilterInternal", HttpServletRequest.class, HttpServletResponse.class, FilterChain.class);
-                doFilterInternal.setAccessible(true);
-                doFilterInternal.invoke(jwtAuthenticationFilter, request, response, filterChain);
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
+            // When
+            jwtAuthenticationFilter.doFilter(request, response, filterChain);
 
             // Then
             then(jwtTokenService).should().parseToken(VALID_TOKEN);
@@ -258,15 +209,8 @@ class JwtAuthenticationFilterTest {
             given(securityContext.getAuthentication()).willReturn(null);
             given(jwtTokenService.parseToken(VALID_TOKEN)).willThrow(new RuntimeException("JWT 처리 오류"));
 
-            // When - Using reflection to call protected method
-            try {
-                Method doFilterInternal = JwtAuthenticationFilter.class.getDeclaredMethod(
-                    "doFilterInternal", HttpServletRequest.class, HttpServletResponse.class, FilterChain.class);
-                doFilterInternal.setAccessible(true);
-                doFilterInternal.invoke(jwtAuthenticationFilter, request, response, filterChain);
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
+            // When
+            jwtAuthenticationFilter.doFilter(request, response, filterChain);
 
             // Then
             then(jwtTokenService).should().parseToken(VALID_TOKEN);

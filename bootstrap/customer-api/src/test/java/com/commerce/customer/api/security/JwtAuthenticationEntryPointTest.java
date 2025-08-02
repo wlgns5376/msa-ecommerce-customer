@@ -24,7 +24,7 @@ import java.time.LocalDateTime;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 
@@ -67,7 +67,7 @@ class JwtAuthenticationEntryPointTest {
             String expectedJson = "{\"error\":\"unauthorized\"}";
             
             given(request.getRequestURI()).willReturn(REQUEST_URI);
-            given(objectMapper.writeValueAsString(anyString())).willReturn(expectedJson);
+            given(objectMapper.writeValueAsString(any(Map.class))).willReturn(expectedJson);
 
             // When
             jwtAuthenticationEntryPoint.commence(request, response, exception);
