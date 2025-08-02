@@ -67,15 +67,17 @@ class CustomerProfileControllerTest {
     private JwtClaims validJwtClaims;
     private AccountId testAccountId;
     private ProfileId testProfileId;
+    private CustomerId testCustomerId;
 
     @BeforeEach
     void setUp() {
         httpRequest = mock(HttpServletRequest.class);
         testAccountId = AccountId.of(1L);
         testProfileId = ProfileId.of(1L);
+        testCustomerId = CustomerId.of(1L);
         
         validJwtClaims = JwtClaims.create(
-            CustomerId.of(1L),
+            testCustomerId,
             testAccountId,
             Email.of("test@example.com"),
             "issuer",
@@ -419,27 +421,10 @@ class CustomerProfileControllerTest {
             PhoneNumber.ofKorean("010-1234-5678")
         );
         
-        ProfilePreferences preferences = ProfilePreferences.of(
-            MarketingConsent.builder()
-                .emailMarketing(true)
-                .smsMarketing(false)
-                .personalizedAds(true)
-                .build(),
-            NotificationSettings.builder()
-                .emailNotification(true)
-                .smsNotification(true)
-                .pushNotification(false)
-                .orderUpdates(true)
-                .build()
-        );
-        
         return CustomerProfile.create(
-            testProfileId,
-            testAccountId,
+            testCustomerId,
             personalInfo,
-            contactInfo,
-            List.of(),
-            preferences
+            contactInfo
         );
     }
 }
