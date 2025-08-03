@@ -31,13 +31,12 @@ public class JwtAccessDeniedHandler implements AccessDeniedHandler {
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setCharacterEncoding("UTF-8");
         
-        Map<String, Object> errorResponse = Map.of(
-            "timestamp", LocalDateTime.now().toString(),
-            "status", HttpServletResponse.SC_FORBIDDEN,
-            "error", "Forbidden",
-            "message", "접근 권한이 없습니다.",
-            "path", request.getRequestURI()
-        );
+        Map<String, Object> errorResponse = new java.util.HashMap<>();
+        errorResponse.put("timestamp", LocalDateTime.now().toString());
+        errorResponse.put("status", HttpServletResponse.SC_FORBIDDEN);
+        errorResponse.put("error", "Forbidden");
+        errorResponse.put("message", "접근 권한이 없습니다.");
+        errorResponse.put("path", request.getRequestURI());
         
         response.getWriter().write(objectMapper.writeValueAsString(errorResponse));
     }

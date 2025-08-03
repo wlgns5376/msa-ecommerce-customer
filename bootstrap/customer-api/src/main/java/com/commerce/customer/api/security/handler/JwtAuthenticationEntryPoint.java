@@ -31,13 +31,12 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setCharacterEncoding("UTF-8");
         
-        Map<String, Object> errorResponse = Map.of(
-            "timestamp", LocalDateTime.now().toString(),
-            "status", HttpServletResponse.SC_UNAUTHORIZED,
-            "error", "Unauthorized",
-            "message", "JWT 토큰이 없거나 유효하지 않습니다.",
-            "path", request.getRequestURI()
-        );
+        Map<String, Object> errorResponse = new java.util.HashMap<>();
+        errorResponse.put("timestamp", LocalDateTime.now().toString());
+        errorResponse.put("status", HttpServletResponse.SC_UNAUTHORIZED);
+        errorResponse.put("error", "Unauthorized");
+        errorResponse.put("message", "JWT 토큰이 없거나 유효하지 않습니다.");
+        errorResponse.put("path", request.getRequestURI());
         
         response.getWriter().write(objectMapper.writeValueAsString(errorResponse));
     }
