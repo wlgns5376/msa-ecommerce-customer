@@ -25,6 +25,7 @@ import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 
@@ -248,7 +249,7 @@ class JwtAuthenticationEntryPointTest {
             // Given
             AuthenticationException exception = new BadCredentialsException(AUTH_EXCEPTION_MESSAGE);
             given(request.getRequestURI()).willReturn(REQUEST_URI);
-            given(objectMapper.writeValueAsString(anyString())).willThrow(new IOException("JSON 직렬화 실패"));
+            given(objectMapper.writeValueAsString(any(Map.class))).willThrow(new IOException("JSON 직렬화 실패"));
 
             // When & Then
             org.junit.jupiter.api.Assertions.assertThrows(IOException.class, () -> {
@@ -281,7 +282,7 @@ class JwtAuthenticationEntryPointTest {
             // Given
             AuthenticationException exception = new BadCredentialsException(AUTH_EXCEPTION_MESSAGE);
             given(request.getRequestURI()).willReturn(REQUEST_URI);
-            given(objectMapper.writeValueAsString(anyString())).willReturn("{}");
+            given(objectMapper.writeValueAsString(any(Map.class))).willReturn("{}");
 
             // When
             jwtAuthenticationEntryPoint.commence(request, response, exception);
@@ -321,7 +322,7 @@ class JwtAuthenticationEntryPointTest {
             // Given
             AuthenticationException exception = new BadCredentialsException(AUTH_EXCEPTION_MESSAGE);
             given(request.getRequestURI()).willReturn(REQUEST_URI);
-            given(objectMapper.writeValueAsString(anyString())).willReturn("{}");
+            given(objectMapper.writeValueAsString(any(Map.class))).willReturn("{}");
 
             // When
             jwtAuthenticationEntryPoint.commence(request, response, exception);
