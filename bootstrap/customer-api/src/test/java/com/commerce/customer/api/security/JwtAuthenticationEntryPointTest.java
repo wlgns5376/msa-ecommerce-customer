@@ -249,10 +249,10 @@ class JwtAuthenticationEntryPointTest {
             // Given
             AuthenticationException exception = new BadCredentialsException(AUTH_EXCEPTION_MESSAGE);
             given(request.getRequestURI()).willReturn(REQUEST_URI);
-            given(objectMapper.writeValueAsString(any(Map.class))).willThrow(new IOException("JSON 직렬화 실패"));
+            given(objectMapper.writeValueAsString(any(Map.class))).willThrow(new RuntimeException("JSON 직렬화 실패"));
 
             // When & Then
-            org.junit.jupiter.api.Assertions.assertThrows(IOException.class, () -> {
+            org.junit.jupiter.api.Assertions.assertThrows(RuntimeException.class, () -> {
                 jwtAuthenticationEntryPoint.commence(request, response, exception);
             });
         }

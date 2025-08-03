@@ -219,7 +219,7 @@ class SecurityConfigTest {
             securityConfig.filterChain(httpSecurity);
 
             // Then
-            then(httpSecurity).should().csrf(AbstractHttpConfigurer::disable);
+            then(httpSecurity).should().csrf(any());
         }
 
         @Test

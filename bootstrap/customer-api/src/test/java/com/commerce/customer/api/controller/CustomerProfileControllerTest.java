@@ -161,25 +161,21 @@ class CustomerProfileControllerTest {
         }
 
         @Test
-        @DisplayName("성공: 전화번호가 null인 경우")
-        void createProfile_WithNullPhoneNumber_Success() {
+        @DisplayName("실패: 전화번호가 null인 경우 NullPointerException 발생")
+        void createProfile_WithNullPhoneNumber_ShouldThrowException() {
             // given
             CreateProfileRequest request = new CreateProfileRequest(
                 "홍", "길동", LocalDate.of(1990, 1, 1), "MALE", null
             );
             given(httpRequest.getAttribute("jwtClaims")).willReturn(validJwtClaims);
-            given(customerProfileApplicationService.createProfile(any(), any(), any()))
-                .willReturn(testProfileId);
 
-            // when
-            ResponseEntity<CreateProfileResponse> response = 
-                customerProfileController.createProfile(request, httpRequest);
-
-            // then
-            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+            // when & then
+            assertThatThrownBy(() -> customerProfileController.createProfile(request, httpRequest))
+                .isInstanceOf(NullPointerException.class)
+                .hasMessageContaining("주 연락처는 필수값입니다");
             
-            then(customerProfileApplicationService).should()
-                .createProfile(eq(testAccountId), any(PersonalInfo.class), any(ContactInfo.class));
+            then(customerProfileApplicationService).should(never())
+                .createProfile(any(), any(), any());
         }
     }
 
