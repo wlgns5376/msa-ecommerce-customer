@@ -349,7 +349,6 @@ class JwtAuthenticationFilterTest {
         void givenProtectedApiRequest_whenShouldNotFilter_thenReturnFalse() throws Exception {
             // Given
             given(request.getRequestURI()).willReturn("/api/v1/profiles");
-            given(request.getMethod()).willReturn("GET");
 
             // When - Using reflection to call protected method
             Method shouldNotFilter = JwtAuthenticationFilter.class.getDeclaredMethod(
