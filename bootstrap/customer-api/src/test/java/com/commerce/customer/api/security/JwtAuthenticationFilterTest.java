@@ -3,6 +3,7 @@ package com.commerce.customer.api.security;
 import com.commerce.customer.api.security.filter.JwtAuthenticationFilter;
 import com.commerce.customer.core.domain.model.jwt.JwtClaims;
 import com.commerce.customer.core.domain.model.jwt.JwtToken;
+import com.commerce.customer.core.domain.model.jwt.JwtTokenType;
 import com.commerce.customer.core.domain.service.jwt.JwtTokenService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -23,6 +24,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -57,6 +59,10 @@ class JwtAuthenticationFilterTest {
     private static final String VALID_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9";
     private static final String BEARER_TOKEN = "Bearer " + VALID_TOKEN;
     private static final String EMAIL = "test@example.com";
+    private static final String SUBJECT = "123";
+    private static final String ACCOUNT_ID = "456";
+    private static final String ISSUER = "test-issuer";
+    private static final String AUDIENCE = "test-audience";
 
     @BeforeEach
     void setUp() {
@@ -72,14 +78,22 @@ class JwtAuthenticationFilterTest {
         void givenValidToken_whenDoFilterInternal_thenAuthenticationSucceeds() throws Exception {
             // Given
             JwtToken jwtToken = mock(JwtToken.class);
-            JwtClaims jwtClaims = mock(JwtClaims.class);
+            JwtClaims jwtClaims = JwtClaims.of(
+                SUBJECT,
+                ACCOUNT_ID, 
+                EMAIL,
+                ISSUER,
+                AUDIENCE,
+                LocalDateTime.now(),
+                LocalDateTime.now().plusMinutes(15),
+                JwtTokenType.ACCESS
+            );
             
             given(request.getHeader("Authorization")).willReturn(BEARER_TOKEN);
             given(securityContext.getAuthentication()).willReturn(null);
             given(jwtTokenService.parseToken(VALID_TOKEN)).willReturn(Optional.of(jwtToken));
             given(jwtTokenService.validateToken(jwtToken)).willReturn(Optional.of(jwtClaims));
             given(jwtTokenService.isTokenBlacklisted(jwtToken)).willReturn(false);
-            given(jwtClaims.getEmail()).willReturn(EMAIL);
 
             // When - doFilterInternal 메서드를 직접 호출
             Method doFilterInternal = JwtAuthenticationFilter.class.getDeclaredMethod(
@@ -200,7 +214,16 @@ class JwtAuthenticationFilterTest {
         void givenBlacklistedToken_whenDoFilterInternal_thenFilterPasses() throws Exception {
             // Given
             JwtToken jwtToken = mock(JwtToken.class);
-            JwtClaims jwtClaims = mock(JwtClaims.class);
+            JwtClaims jwtClaims = JwtClaims.of(
+                SUBJECT,
+                ACCOUNT_ID, 
+                EMAIL,
+                ISSUER,
+                AUDIENCE,
+                LocalDateTime.now(),
+                LocalDateTime.now().plusMinutes(15),
+                JwtTokenType.ACCESS
+            );
             
             given(request.getHeader("Authorization")).willReturn(BEARER_TOKEN);
             given(securityContext.getAuthentication()).willReturn(null);

@@ -7,11 +7,11 @@ import com.commerce.customer.core.domain.model.CustomerId;
 import com.commerce.customer.core.domain.model.Email;
 import com.commerce.customer.core.domain.model.jwt.*;
 import io.jsonwebtoken.*;
-import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
+import java.time.Clock;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
@@ -32,18 +32,28 @@ public class JwtTokenServiceImpl implements JwtTokenService {
 
     private final SecretKey secretKey;
     private final JwtParser jwtParser;
+    private final Clock clock;
     
     // 블랙리스트 (실제 운영환경에서는 Redis 등을 사용)
     private final Map<String, LocalDateTime> tokenBlacklist = new ConcurrentHashMap<>();
 
-    public JwtTokenServiceImpl() {
-        // 실제 운영환경에서는 외부 설정에서 키를 로드해야 함
-        this.secretKey = Keys.secretKeyFor(SignatureAlgorithm.HS256);
+    public JwtTokenServiceImpl(SecretKey secretKey, Clock clock) {
+        this.secretKey = secretKey;
+        this.clock = clock;
         this.jwtParser = Jwts.parser()
                 .verifyWith(secretKey)
                 .requireIssuer(ISSUER)
                 .requireAudience(AUDIENCE)
                 .build();
+    }
+
+    public JwtTokenServiceImpl(SecretKey secretKey) {
+        this(secretKey, Clock.systemDefaultZone());
+    }
+
+    public JwtTokenServiceImpl() {
+        // 실제 운영환경에서는 외부 설정에서 키를 로드해야 함
+        this(Jwts.SIG.HS256.key().build(), Clock.systemDefaultZone());
     }
 
     @Override
@@ -161,7 +171,7 @@ public class JwtTokenServiceImpl implements JwtTokenService {
     }
 
     private JwtToken generateToken(CustomerId customerId, AccountId accountId, Email email, JwtTokenType tokenType) {
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(clock);
         LocalDateTime expiresAt = now.plusMinutes(tokenType.getExpirationMinutes());
 
         Map<String, Object> claims = new HashMap<>();

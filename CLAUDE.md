@@ -101,6 +101,68 @@ msa_ecommerce_customer/
 - 예외 상황 테스트 포함
 - DisplayName 사용하여 테스트 가독성 향상
 - Parameterized Tests 를 적절히 활용
+- 의존성 추상화: 시간, 외부 시스템 등 테스트 제어성 확보
+- 실제 구현 재사용: 테스트용 별도 구현 금지
+
+## 시간 의존적 테스트 방법론
+### 핵심 원칙
+- **실제 구현 100% 재사용**: 테스트용 별도 구현 생성 금지
+- **의존성 추상화**: Clock, Random 등 외부 의존성을 추상화하여 테스트 제어성 확보
+- **Clock 패턴**: 시간 관련 테스트는 Clock 의존성 주입으로 해결
+
+### 구현 패턴
+```java
+// 서비스 클래스 - Clock 의존성 주입
+public class SomeService {
+    private final Clock clock;
+    
+    public SomeService(Clock clock) {
+        this.clock = clock;
+    }
+    
+    public SomeService() {
+        this(Clock.systemDefaultZone()); // 기본 생성자
+    }
+    
+    private SomeResult doSomething() {
+        LocalDateTime now = LocalDateTime.now(clock); // Clock 사용
+        // 실제 비즈니스 로직
+    }
+}
+
+// 테스트 코드 - 시간 조작으로 실제 구현 재사용
+@Test
+void testExpiredScenario() {
+    // Given: 과거 시간으로 설정된 Clock 주입
+    Clock pastClock = Clock.fixed(Instant.now().minus(8, ChronoUnit.DAYS), ZoneId.systemDefault());
+    SomeService pastService = new SomeService(pastClock);
+    
+    // 실제 구현 메서드 사용하여 만료된 데이터 생성
+    SomeResult expiredResult = pastService.doSomething();
+    
+    // When & Then: 현재 시간 기준 서비스로 검증
+    assertThatThrownBy(() -> currentService.validate(expiredResult))
+        .isInstanceOf(ExpiredException.class);
+}
+```
+
+### 적용 시나리오
+- 시간 의존적 로직 테스트 (만료, 스케줄링, 타임스탬프)
+- 외부 API 호출 테스트 (추상화 인터페이스 사용)
+- 랜덤 값 테스트 (Random 추상화)
+
+### 금지 패턴
+```java
+// ❌ 나쁜 예: 테스트용 별도 구현
+private SomeObject createExpiredObject() {
+    // 실제 구현과 다른 로직 - 신뢰성 저하 위험
+}
+
+// ✅ 좋은 예: 의존성 추상화
+public SomeService(Clock clock, RandomGenerator random) {
+    // 실제 구현을 그대로 사용, 의존성만 주입으로 제어
+}
+```
 
 ## 통합 테스트 코드 규칙
 - 가독성과 유지 보수성을 고려
@@ -176,17 +238,7 @@ src/test/java/
 - 프로젝트 구조 상세화
 
 ## GitHub 작업 설정
-- **GitHub App 사용**: 모든 GitHub 관련 작업은 GitHub App 인증으로 수행
-- **환경변수 설정 필요**:
-  - `GITHUB_APP_ID`: GitHub App ID
-  - `GITHUB_APP_INSTALLATION_ID`: GitHub App Installation ID  
-  - `GITHUB_APP_PRIVATE_KEY_PATH`: GitHub App Private Key 파일 경로
-- **GitHub CLI 로그인**:
-  ```bash
-  node .github/bin/generate_access_token.js > /tmp/access_token.txt
-  gh auth login --with-token < /tmp/access_token.txt
-  ```
-- **GitHub CLI**: `gh` 명령어로 PR, Issue, Review 등 모든 GitHub 작업 처리
+- **GitHub CLI 사용**: 모든 GitHub 관련 작업은 `gh` 로 수행
 
 ## 개발 팁
 - 새 모듈 추가 시 settings.gradle에 include 추가
