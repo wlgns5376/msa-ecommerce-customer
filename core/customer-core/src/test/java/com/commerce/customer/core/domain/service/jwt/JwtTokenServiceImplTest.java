@@ -6,11 +6,17 @@ import com.commerce.customer.core.domain.model.AccountId;
 import com.commerce.customer.core.domain.model.CustomerId;
 import com.commerce.customer.core.domain.model.Email;
 import com.commerce.customer.core.domain.model.jwt.*;
+import io.jsonwebtoken.ExpiredJwtException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import javax.crypto.SecretKey;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
@@ -19,14 +25,16 @@ import static org.assertj.core.api.Assertions.*;
 class JwtTokenServiceImplTest {
 
     private JwtTokenServiceImpl jwtTokenService;
+    private SecretKey testSecretKey;
     private CustomerId customerId;
     private AccountId accountId;
     private Email email;
 
     @BeforeEach
     void setUp() {
-        jwtTokenService = new JwtTokenServiceImpl();
-        customerId = CustomerId.generate();
+        testSecretKey = io.jsonwebtoken.Jwts.SIG.HS256.key().build();
+        jwtTokenService = new JwtTokenServiceImpl(testSecretKey);
+        customerId = CustomerId.of(12345L);
         accountId = AccountId.of(123L);
         email = Email.of("test@example.com");
     }
@@ -223,6 +231,43 @@ class JwtTokenServiceImplTest {
 
             // When & Then
             assertThat(jwtTokenService.isTokenBlacklisted(accessToken)).isFalse();
+        }
+    }
+
+    @Nested
+    @DisplayName("만료된 토큰 예외 테스트")
+    class ExpiredTokenExceptionTest {
+
+        @Test
+        @DisplayName("만료된 토큰 검증 시 ExpiredJwtTokenException이 발생한다")
+        void validateToken_WithExpiredToken_ShouldThrowExpiredJwtTokenException() {
+            // Given: 2시간 전 시간으로 설정된 Clock으로 토큰 생성
+            Clock pastClock = Clock.fixed(Instant.now().minus(2, ChronoUnit.HOURS), ZoneId.systemDefault());
+            JwtTokenServiceImpl pastService = new JwtTokenServiceImpl(testSecretKey, pastClock);
+            
+            // 실제 generateToken 메서드 사용하여 만료된 토큰 생성
+            TokenPair expiredTokens = pastService.generateTokenPair(customerId, accountId, email);
+            
+            // When & Then: 현재 시간 기준 서비스로 검증 시 예외 발생
+            assertThatThrownBy(() -> jwtTokenService.validateToken(expiredTokens.getAccessToken()))
+                .isInstanceOf(ExpiredJwtTokenException.class)
+                .hasMessageContaining("만료된 토큰입니다")
+                .hasCauseInstanceOf(ExpiredJwtException.class);
+        }
+
+        @Test
+        @DisplayName("만료된 리프레시 토큰으로 액세스 토큰 갱신 시 ExpiredJwtTokenException이 발생한다")
+        void refreshAccessToken_WithExpiredRefreshToken_ShouldThrowExpiredJwtTokenException() {
+            // Given: 8일 전 시간으로 설정하여 리프레시 토큰도 만료되도록 (리프레시 토큰 만료: 7일)
+            Clock pastClock = Clock.fixed(Instant.now().minus(8, ChronoUnit.DAYS), ZoneId.systemDefault());
+            JwtTokenServiceImpl pastService = new JwtTokenServiceImpl(testSecretKey, pastClock);
+            
+            TokenPair expiredTokens = pastService.generateTokenPair(customerId, accountId, email);
+            
+            // When & Then
+            assertThatThrownBy(() -> jwtTokenService.refreshAccessToken(expiredTokens.getRefreshToken()))
+                .isInstanceOf(ExpiredJwtTokenException.class)
+                .hasMessageContaining("만료된 토큰입니다");
         }
     }
 }
