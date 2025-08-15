@@ -33,10 +33,10 @@ COPY bootstrap/customer-api/src bootstrap/customer-api/src
 RUN ./gradlew :bootstrap:customer-api:build -x test --no-daemon
 
 # Stage 2: Runtime stage
-FROM eclipse-temurin:17-jre
+FROM eclipse-temurin:17-jre-slim
 
 # 필요한 패키지 설치
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     tzdata \
     && rm -rf /var/lib/apt/lists/*
@@ -47,7 +47,7 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 # 애플리케이션 사용자 생성
 RUN groupadd -g 1000 spring && \
-    useradd -u 1000 -g spring -m -s /bin/bash spring
+    useradd -r -u 1000 -g spring spring
 
 # 작업 디렉토리 설정
 WORKDIR /app
