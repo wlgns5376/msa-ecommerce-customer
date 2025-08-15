@@ -1,6 +1,6 @@
 # Multi-stage build for Spring Boot application
 # Stage 1: Build stage
-FROM gradle:8.5-jdk17-alpine AS builder
+FROM gradle:8.5-jdk17 AS builder
 
 # 작업 디렉토리 설정
 WORKDIR /app
@@ -33,21 +33,21 @@ COPY bootstrap/customer-api/src bootstrap/customer-api/src
 RUN ./gradlew :bootstrap:customer-api:build -x test --no-daemon
 
 # Stage 2: Runtime stage
-FROM eclipse-temurin:17-jre-alpine
+FROM eclipse-temurin:17-jre-slim
 
 # 필요한 패키지 설치
-RUN apk add --no-cache \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     tzdata \
-    && rm -rf /var/cache/apk/*
+    && rm -rf /var/lib/apt/lists/*
 
 # 한국 시간대 설정
 ENV TZ=Asia/Seoul
-RUN cp /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 # 애플리케이션 사용자 생성
-RUN addgroup -g 1000 -S spring && \
-    adduser -u 1000 -S spring -G spring
+RUN groupadd -g 1000 spring && \
+    useradd -r -u 1000 -g spring spring
 
 # 작업 디렉토리 설정
 WORKDIR /app
