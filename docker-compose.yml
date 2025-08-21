@@ -1,135 +1,51 @@
+# Docker Compose 통합 실행 파일
+# 
+# 이 파일은 기본적으로 인프라 서비스와 애플리케이션을 함께 실행합니다.
+# 
+# 사용법:
+# - 전체 실행: docker-compose up -d
+# - 인프라만 실행: docker-compose -f docker-compose.infra.yml up -d
+# - 앱만 실행: docker-compose -f docker-compose.app.yml up -d
+# - 다중 파일 실행: docker-compose -f docker-compose.infra.yml -f docker-compose.app.yml up -d
+
 version: '3.8'
 
 services:
   # MariaDB 데이터베이스
   mariadb:
-    image: mariadb:11.2
-    container_name: customer-mariadb
-    restart: unless-stopped
-    ports:
-      - "3306:3306"
-    environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpassword}
-      MYSQL_DATABASE: ${MYSQL_DATABASE:-customer_db}
-      MYSQL_USER: ${MYSQL_USER:-customer_user}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-customer_password}
-      TZ: Asia/Seoul
-    volumes:
-      - mariadb_data:/var/lib/mysql
-      - ./infrastructure/persistence/src/main/resources/db/migration:/docker-entrypoint-initdb.d:ro
-    command:
-      - --character-set-server=utf8mb4
-      - --collation-server=utf8mb4_unicode_ci
-      - --skip-character-set-client-handshake
-      - --max_connections=200
-      - --innodb_buffer_pool_size=256M
-    healthcheck:
-      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
-    networks:
-      - customer-network
+    extends:
+      file: docker-compose.infra.yml
+      service: mariadb
 
   # Redis 캐시 서버
   redis:
-    image: redis:7.2-alpine
-    container_name: customer-redis
-    restart: unless-stopped
-    ports:
-      - "6379:6379"
-    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-redis_password}
-    volumes:
-      - redis_data:/data
-    healthcheck:
-      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - customer-network
+    extends:
+      file: docker-compose.infra.yml
+      service: redis
 
   # Zookeeper (Kafka 의존성)
   zookeeper:
-    image: confluentinc/cp-zookeeper:7.5.3
-    container_name: customer-zookeeper
-    restart: unless-stopped
-    ports:
-      - "2181:2181"
-    environment:
-      ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 2000
-      ZOOKEEPER_SYNC_LIMIT: 2
-    volumes:
-      - zookeeper_data:/var/lib/zookeeper/data
-      - zookeeper_logs:/var/lib/zookeeper/log
-    healthcheck:
-      test: ["CMD", "bash", "-c", "echo 'ruok' | nc localhost 2181 | grep imok"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - customer-network
+    extends:
+      file: docker-compose.infra.yml
+      service: zookeeper
 
   # Kafka 메시지 브로커
   kafka:
-    image: confluentinc/cp-kafka:7.5.3
-    container_name: customer-kafka
-    restart: unless-stopped
-    depends_on:
-      zookeeper:
-        condition: service_healthy
-    ports:
-      - "9092:9092"
-      - "9093:9093"
-    environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
-      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
-      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
-      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
-      KAFKA_LOG_RETENTION_HOURS: 168
-      KAFKA_LOG_SEGMENT_BYTES: 1073741824
-      KAFKA_LOG_RETENTION_CHECK_INTERVAL_MS: 300000
-    volumes:
-      - kafka_data:/var/lib/kafka/data
-    healthcheck:
-      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
-    networks:
-      - customer-network
+    extends:
+      file: docker-compose.infra.yml
+      service: kafka
 
   # Kafka UI (선택사항 - 개발 시 유용)
   kafka-ui:
-    image: provectuslabs/kafka-ui:latest
-    container_name: customer-kafka-ui
-    restart: unless-stopped
-    depends_on:
-      - kafka
-    ports:
-      - "8090:8080"
-    environment:
-      KAFKA_CLUSTERS_0_NAME: local
-      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
-      KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
-    networks:
-      - customer-network
+    extends:
+      file: docker-compose.infra.yml
+      service: kafka-ui
 
   # Spring Boot 애플리케이션
   customer-api:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: customer-api
-    restart: unless-stopped
+    extends:
+      file: docker-compose.app.yml
+      service: customer-api
     depends_on:
       mariadb:
         condition: service_healthy
@@ -137,48 +53,6 @@ services:
         condition: service_healthy
       kafka:
         condition: service_healthy
-    ports:
-      - "8080:8080"
-    environment:
-      # Spring 프로파일
-      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
-      
-      # 데이터베이스 설정
-      SPRING_DATASOURCE_URL: jdbc:mariadb://mariadb:3306/${MYSQL_DATABASE:-customer_db}?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Seoul
-      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER:-customer_user}
-      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD:-customer_password}
-      
-      # Redis 설정
-      SPRING_DATA_REDIS_HOST: redis
-      SPRING_DATA_REDIS_PORT: 6379
-      SPRING_DATA_REDIS_PASSWORD: ${REDIS_PASSWORD:-redis_password}
-      
-      # Kafka 설정
-      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
-      
-      # JPA 설정
-      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
-      SPRING_JPA_SHOW_SQL: ${JPA_SHOW_SQL:-false}
-      
-      # Flyway 설정
-      SPRING_FLYWAY_ENABLED: true
-      
-      # JWT 설정
-      JWT_SECRET: ${JWT_SECRET:-your-secret-key-here-please-change-in-production}
-      JWT_ACCESS_TOKEN_EXPIRATION: ${JWT_ACCESS_TOKEN_EXPIRATION:-3600000}
-      JWT_REFRESH_TOKEN_EXPIRATION: ${JWT_REFRESH_TOKEN_EXPIRATION:-86400000}
-      
-      # 로깅 설정
-      LOGGING_LEVEL_ROOT: ${LOGGING_LEVEL:-INFO}
-      LOGGING_LEVEL_COM_COMMERCE: ${LOGGING_LEVEL_APP:-DEBUG}
-      
-      # Actuator 설정
-      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,info,metrics,prometheus
-      MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS: always
-    volumes:
-      - ./logs:/app/logs
-    networks:
-      - customer-network
 
 # 볼륨 정의
 volumes:

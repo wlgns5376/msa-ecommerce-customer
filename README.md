@@ -87,8 +87,11 @@
 
 - Java 17 이상
 - Gradle 8.5 이상
+- Docker & Docker Compose (컨테이너 실행 시)
 
 ### 빌드 및 실행
+
+#### Gradle 빌드
 
 ```bash
 # 전체 빌드
@@ -107,6 +110,43 @@
 # 클린 빌드
 ./gradlew clean build
 ```
+
+#### Docker Compose
+
+Docker Compose 파일이 분리되어 있어 필요에 따라 인프라 서비스와 애플리케이션을 독립적으로 실행할 수 있습니다.
+
+```bash
+# 전체 스택 실행 (인프라 + 애플리케이션)
+docker-compose up -d
+
+# 인프라 서비스만 실행 (MariaDB, Redis, Kafka 등)
+docker-compose -f docker-compose.infra.yml up -d
+# 또는 헬퍼 스크립트 사용
+./docker-infra.sh up
+
+# 애플리케이션만 실행 (customer-api)
+docker-compose -f docker-compose.app.yml up -d
+# 또는 헬퍼 스크립트 사용
+./docker-app.sh up
+
+# 서비스 중지
+docker-compose down
+./docker-infra.sh down
+./docker-app.sh down
+
+# 볼륨 포함하여 전체 초기화
+docker-compose down -v
+./docker-infra.sh clean
+```
+
+**Docker Compose 파일 구조:**
+- `docker-compose.yml`: 전체 스택 실행 (인프라 + 앱)
+- `docker-compose.infra.yml`: 인프라 서비스만 (MariaDB, Redis, Kafka, Zookeeper)
+- `docker-compose.app.yml`: 애플리케이션만 (customer-api)
+
+**헬퍼 스크립트:**
+- `docker-infra.sh`: 인프라 서비스 관리 명령어
+- `docker-app.sh`: 애플리케이션 관리 명령어
 
 ### API 서버 접속
 
