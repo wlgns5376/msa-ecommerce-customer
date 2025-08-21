@@ -17,12 +17,12 @@ services:
       # 데이터베이스 설정
       SPRING_DATASOURCE_URL: jdbc:mariadb://mariadb:3306/${MYSQL_DATABASE:-customer_db}?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Seoul
       SPRING_DATASOURCE_USERNAME: ${MYSQL_USER:-customer_user}
-      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD?Error: MYSQL_PASSWORD is not set in .env file}
       
       # Redis 설정
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
-      SPRING_DATA_REDIS_PASSWORD: ${REDIS_PASSWORD}
+      SPRING_DATA_REDIS_PASSWORD: ${REDIS_PASSWORD?Error: REDIS_PASSWORD is not set in .env file}
       
       # Kafka 설정
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
@@ -35,7 +35,7 @@ services:
       SPRING_FLYWAY_ENABLED: true
       
       # JWT 설정
-      JWT_SECRET: ${JWT_SECRET}
+      JWT_SECRET: ${JWT_SECRET?Error: JWT_SECRET is not set in .env file}
       JWT_ACCESS_TOKEN_EXPIRATION: ${JWT_ACCESS_TOKEN_EXPIRATION:-3600000}
       JWT_REFRESH_TOKEN_EXPIRATION: ${JWT_REFRESH_TOKEN_EXPIRATION:-86400000}
       

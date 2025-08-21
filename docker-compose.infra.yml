@@ -9,10 +9,10 @@ services:
     ports:
       - "3306:3306"
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD?Error: MYSQL_ROOT_PASSWORD is not set in .env file}
       MYSQL_DATABASE: ${MYSQL_DATABASE:-customer_db}
       MYSQL_USER: ${MYSQL_USER:-customer_user}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD?Error: MYSQL_PASSWORD is not set in .env file}
       TZ: Asia/Seoul
     volumes:
       - mariadb_data:/var/lib/mysql
@@ -39,7 +39,7 @@ services:
     restart: unless-stopped
     ports:
       - "6379:6379"
-    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD?Error: REDIS_PASSWORD is not set in .env file}
     volumes:
       - redis_data:/data
     healthcheck:
@@ -109,7 +109,7 @@ services:
 
   # Kafka UI (선택사항 - 개발 시 유용)
   kafka-ui:
-    image: provectuslabs/kafka-ui:latest
+    image: provectuslabs/kafka-ui:v0.7.2
     container_name: customer-kafka-ui
     restart: unless-stopped
     depends_on:
