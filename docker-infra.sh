@@ -5,36 +5,37 @@
 set -e
 
 COMMAND=${1:-help}
+shift
 
 case $COMMAND in
   up)
     echo "Starting infrastructure services..."
-    docker-compose -f docker-compose.infra.yml up -d
+    docker-compose -f docker-compose.infra.yml up -d "$@"
     echo "Infrastructure services started successfully!"
     ;;
   down)
     echo "Stopping infrastructure services..."
-    docker-compose -f docker-compose.infra.yml down
+    docker-compose -f docker-compose.infra.yml down "$@"
     echo "Infrastructure services stopped!"
     ;;
   restart)
     echo "Restarting infrastructure services..."
-    docker-compose -f docker-compose.infra.yml restart
+    docker-compose -f docker-compose.infra.yml restart "$@"
     echo "Infrastructure services restarted!"
     ;;
   logs)
-    docker-compose -f docker-compose.infra.yml logs -f ${2}
+    docker-compose -f docker-compose.infra.yml logs -f "$@"
     ;;
   ps)
-    docker-compose -f docker-compose.infra.yml ps
+    docker-compose -f docker-compose.infra.yml ps "$@"
     ;;
   clean)
     echo "Stopping and removing infrastructure services with volumes..."
-    docker-compose -f docker-compose.infra.yml down -v
+    docker-compose -f docker-compose.infra.yml down -v "$@"
     echo "Infrastructure services and volumes removed!"
     ;;
   help)
-    echo "Usage: $0 {up|down|restart|logs|ps|clean|help}"
+    echo "Usage: $0 {up|down|restart|logs|ps|clean|help} [options]"
     echo ""
     echo "Commands:"
     echo "  up       - Start infrastructure services"

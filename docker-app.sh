@@ -5,36 +5,37 @@
 set -e
 
 COMMAND=${1:-help}
+shift
 
 case $COMMAND in
   up)
     echo "Starting application..."
-    docker-compose -f docker-compose.app.yml up -d
+    docker-compose -f docker-compose.app.yml up -d "$@"
     echo "Application started successfully!"
     ;;
   down)
     echo "Stopping application..."
-    docker-compose -f docker-compose.app.yml down
+    docker-compose -f docker-compose.app.yml down "$@"
     echo "Application stopped!"
     ;;
   restart)
     echo "Restarting application..."
-    docker-compose -f docker-compose.app.yml restart
+    docker-compose -f docker-compose.app.yml restart "$@"
     echo "Application restarted!"
     ;;
   build)
     echo "Building application..."
-    docker-compose -f docker-compose.app.yml build ${2}
+    docker-compose -f docker-compose.app.yml build "$@"
     echo "Application built successfully!"
     ;;
   logs)
-    docker-compose -f docker-compose.app.yml logs -f ${2}
+    docker-compose -f docker-compose.app.yml logs -f "$@"
     ;;
   ps)
-    docker-compose -f docker-compose.app.yml ps
+    docker-compose -f docker-compose.app.yml ps "$@"
     ;;
   help)
-    echo "Usage: $0 {up|down|restart|build|logs|ps|help}"
+    echo "Usage: $0 {up|down|restart|build|logs|ps|help} [options]"
     echo ""
     echo "Commands:"
     echo "  up       - Start application"
