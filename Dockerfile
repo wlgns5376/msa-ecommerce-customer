@@ -23,37 +23,35 @@ COPY bootstrap/customer-api/build.gradle bootstrap/customer-api/
 RUN ./gradlew dependencies --no-daemon
 
 # 소스 코드 복사
-COPY common/src common/src
 COPY core/customer-core/src core/customer-core/src
 COPY infrastructure/kafka/src infrastructure/kafka/src
 COPY infrastructure/persistence/src infrastructure/persistence/src
 COPY bootstrap/customer-api/src bootstrap/customer-api/src
 
 # 애플리케이션 빌드
-RUN ./gradlew :bootstrap:customer-api:build -x test --no-daemon
+RUN ./gradlew :customer-api:build -x test --no-daemon
 
 # Stage 2: Runtime stage
-FROM eclipse-temurin:17-jre-slim
+FROM amazoncorretto:17-alpine
 
 # 필요한 패키지 설치
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apk add --no-cache \
     curl \
-    tzdata \
-    && rm -rf /var/lib/apt/lists/*
+    tzdata
 
 # 한국 시간대 설정
 ENV TZ=Asia/Seoul
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 # 애플리케이션 사용자 생성
-RUN groupadd -g 1000 spring && \
-    useradd -r -u 1000 -g spring spring
+RUN addgroup -g 1000 -S spring && \
+    adduser -u 1000 -S -G spring spring
 
 # 작업 디렉토리 설정
 WORKDIR /app
 
 # 빌드된 JAR 파일 복사
-COPY --from=builder --chown=spring:spring /app/bootstrap/customer-api/build/libs/*.jar app.jar
+COPY --from=builder --chown=spring:spring /app/bootstrap/customer-api/build/libs/*-SNAPSHOT.jar app.jar
 
 # 애플리케이션 사용자로 전환
 USER spring:spring
