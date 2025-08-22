@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  # Spring Boot 애플리케이션
+  customer-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: customer-api
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      # Spring 프로파일
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
+      
+      # 데이터베이스 설정
+      SPRING_DATASOURCE_URL: jdbc:mariadb://mariadb:3306/${MYSQL_DATABASE:-customer_db}?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Seoul
+      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER:-customer_user}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD?Error: MYSQL_PASSWORD is not set in .env file}
+      
+      # Redis 설정
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      SPRING_DATA_REDIS_PASSWORD: ${REDIS_PASSWORD?Error: REDIS_PASSWORD is not set in .env file}
+      
+      # Kafka 설정
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      
+      # JPA 설정
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+      SPRING_JPA_SHOW_SQL: ${JPA_SHOW_SQL:-false}
+      
+      # Flyway 설정
+      SPRING_FLYWAY_ENABLED: true
+      
+      # JWT 설정
+      JWT_SECRET: ${JWT_SECRET?Error: JWT_SECRET is not set in .env file}
+      JWT_ACCESS_TOKEN_EXPIRATION: ${JWT_ACCESS_TOKEN_EXPIRATION:-3600000}
+      JWT_REFRESH_TOKEN_EXPIRATION: ${JWT_REFRESH_TOKEN_EXPIRATION:-86400000}
+      
+      # 로깅 설정
+      LOGGING_LEVEL_ROOT: ${LOGGING_LEVEL:-INFO}
+      LOGGING_LEVEL_COM_COMMERCE: ${LOGGING_LEVEL_APP:-DEBUG}
+      
+      # Actuator 설정
+      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,info,metrics,prometheus
+      MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS: always
+    volumes:
+      - ./logs:/app/logs
+    networks:
+      - customer-network
+
+# 외부 네트워크 사용 (인프라 서비스와 통신)
+networks:
+  customer-network:
+    external: true
