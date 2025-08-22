@@ -9,10 +9,10 @@ services:
     ports:
       - "3306:3306"
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD?Error: MYSQL_ROOT_PASSWORD is not set in .env file}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DATABASE:-customer_db}
       MYSQL_USER: ${MYSQL_USER:-customer_user}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD?Error: MYSQL_PASSWORD is not set in .env file}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
       TZ: Asia/Seoul
     volumes:
       - mariadb_data:/var/lib/mysql
@@ -39,7 +39,7 @@ services:
     restart: unless-stopped
     ports:
       - "6379:6379"
-    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD?Error: REDIS_PASSWORD is not set in .env file}
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
     volumes:
       - redis_data:/data
     healthcheck:
@@ -140,7 +140,8 @@ volumes:
 # 네트워크 정의
 networks:
   customer-network:
+    name: customer-network
     driver: bridge
     ipam:
       config:
-        - subnet: 172.20.0.0/16
+        - subnet: 172.25.0.0/16
