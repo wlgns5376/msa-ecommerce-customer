@@ -32,12 +32,7 @@ class AccountActivationIntegrationTest extends AbstractIntegrationTest {
     
     @Autowired
     private AccountJpaRepository accountRepository;
-    
-    @BeforeEach
-    void setUp() {
-        waitForContainers();
-    }
-    
+
     @Test
     @DisplayName("계정 생성 -> 활성화 -> 로그인 -> 로그아웃 전체 시나리오")
     void accountLifecycleTest() throws Exception {

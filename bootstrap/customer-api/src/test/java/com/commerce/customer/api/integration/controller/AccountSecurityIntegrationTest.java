@@ -32,12 +32,7 @@ class AccountSecurityIntegrationTest extends AbstractIntegrationTest {
     
     @Autowired
     private AccountJpaRepository accountRepository;
-    
-    @BeforeEach
-    void setUp() {
-        waitForContainers();
-    }
-    
+
     @Test
     @DisplayName("잘못된 비밀번호로 로그인 시도 - 실패")
     void login_WithWrongPassword_Failure() throws Exception {

@@ -40,7 +40,6 @@ class ProfileEdgeCaseIntegrationTest extends AbstractIntegrationTest {
     
     @BeforeEach
     void setUp() throws Exception {
-        waitForContainers();
         authenticatedAccount = createAuthenticatedAccount(mockMvc, objectMapper, accountRepository);
     }
     

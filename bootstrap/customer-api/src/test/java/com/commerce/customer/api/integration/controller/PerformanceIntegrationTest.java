@@ -37,12 +37,7 @@ class PerformanceIntegrationTest extends AbstractIntegrationTest {
     
     @Autowired
     private AccountJpaRepository accountRepository;
-    
-    @BeforeEach
-    void setUp() {
-        waitForContainers();
-    }
-    
+
     @Test
     @DisplayName("동시 다발적 계정 생성 - 고유성 보장")
     void concurrentAccountCreation_UniquenessGuaranteed() throws Exception {
@@ -90,32 +85,40 @@ class PerformanceIntegrationTest extends AbstractIntegrationTest {
     }
     
     @Test
-    @DisplayName("대량 로그인 요청 처리")
+    @DisplayName("대량 로그인 요청 처리 - 3초 이내 완료")
     void bulkLoginRequests_HandledProperly() throws Exception {
         // Given - 여러 계정 생성 및 활성화
         int accountCount = 5;
         List<String> emails = new ArrayList<>();
-        
+
         for (int i = 0; i < accountCount; i++) {
             var accountData = createAndActivateAccount(mockMvc, objectMapper, accountRepository);
             emails.add(accountData.getEmail());
         }
-        
+
         // When - 모든 계정으로 순차적으로 로그인
         long startTime = System.currentTimeMillis();
-        
+
         for (String email : emails) {
             mockMvc.perform(post(LOGIN_API_PATH)
                     .contentType("application/json")
                     .content(objectMapper.writeValueAsString(createLoginRequest(email))))
                     .andExpect(status().isOk());
         }
-        
+
         long endTime = System.currentTimeMillis();
         long totalTime = endTime - startTime;
-        
-        // Then - 합리적인 시간 내에 완료 (5초 이내)
-        assertThat(totalTime).isLessThan(5000);
+
+        // Then - 더 엄격한 성능 기준: 3초 이내
+        assertThat(totalTime)
+                .as("5개 계정 로그인이 3초 이내에 완료되어야 함 (실제: %dms)", totalTime)
+                .isLessThan(3000);
+
+        // 평균 응답 시간 검증 (600ms 이내)
+        long averageTime = totalTime / accountCount;
+        assertThat(averageTime)
+                .as("평균 로그인 응답 시간이 600ms 이내여야 함 (실제: %dms)", averageTime)
+                .isLessThan(600);
     }
     
     @Test
@@ -167,37 +170,52 @@ class PerformanceIntegrationTest extends AbstractIntegrationTest {
     }
     
     @Test
-    @DisplayName("반복적인 프로필 조회 - 캐싱 효과")
-    void repeatedProfileQueries_CachingEffect() throws Exception {
+    @DisplayName("반복적인 프로필 조회 - 성능 검증")
+    void repeatedProfileQueries_Performance() throws Exception {
         // Given - 계정 생성, 활성화, 프로필 생성
         var authenticatedAccount = createAuthenticatedAccount(mockMvc, objectMapper, accountRepository);
         createProfile(mockMvc, objectMapper, authenticatedAccount.getAccessToken());
-        
+
         // When - 동일한 프로필을 10번 조회
         long[] responseTimes = new long[10];
-        
+
         for (int i = 0; i < 10; i++) {
-            long startTime = System.currentTimeMillis();
-            
+            long startTime = System.nanoTime();
+
             mockMvc.perform(get(MY_PROFILE_API_PATH)
                     .header(AUTHORIZATION_HEADER, authenticatedAccount.getAuthorizationHeader()))
                     .andExpect(status().isOk());
-            
-            long endTime = System.currentTimeMillis();
-            responseTimes[i] = endTime - startTime;
+
+            long endTime = System.nanoTime();
+            responseTimes[i] = (endTime - startTime) / 1_000_000; // 나노초를 밀리초로 변환
         }
-        
-        // Then - 첫 번째 요청보다 이후 요청들이 더 빠름 (캐싱 효과)
-        long firstRequestTime = responseTimes[0];
-        long averageSubsequentTime = 0;
-        
-        for (int i = 1; i < 10; i++) {
-            averageSubsequentTime += responseTimes[i];
+
+        // Then - 성능 검증
+        long totalTime = 0;
+        long maxTime = 0;
+        long minTime = Long.MAX_VALUE;
+
+        for (long time : responseTimes) {
+            totalTime += time;
+            maxTime = Math.max(maxTime, time);
+            minTime = Math.min(minTime, time);
         }
-        averageSubsequentTime /= 9;
-        
-        // 캐싱으로 인해 평균 응답 시간이 첫 요청보다 빠를 것으로 예상
-        // 하지만 테스트 환경에 따라 달라질 수 있으므로 단순히 합리적인 시간 내 완료 확인
-        assertThat(averageSubsequentTime).isLessThan(1000); // 1초 이내
+
+        long averageTime = totalTime / responseTimes.length;
+
+        // 평균 응답 시간 검증 (500ms 이내)
+        assertThat(averageTime)
+                .as("평균 프로필 조회 응답 시간이 500ms 이내여야 함 (실제: %dms)", averageTime)
+                .isLessThan(500);
+
+        // 최대 응답 시간 검증 (1초 이내)
+        assertThat(maxTime)
+                .as("최대 응답 시간이 1초 이내여야 함 (실제: %dms)", maxTime)
+                .isLessThan(1000);
+
+        // 전체 요청 시간 검증 (5초 이내)
+        assertThat(totalTime)
+                .as("10번의 프로필 조회가 5초 이내에 완료되어야 함 (실제: %dms)", totalTime)
+                .isLessThan(5000);
     }
 }

@@ -164,3 +164,11 @@ task testAll {
     description = 'Runs all tests in all subprojects'
     dependsOn subprojects.test
 }
+
+// 모든 통합테스트 실행
+task integrationTestAll {
+    description = 'Runs all integration tests in all subprojects'
+    group = 'verification'
+
+    dependsOn subprojects.findAll { it.tasks.findByName('integrationTest') }.collect { it.tasks.integrationTest }
+}

@@ -65,6 +65,50 @@ dependencyManagement {
     }
 }
 
+// 단위 테스트 설정
 tasks.named('test') {
-    useJUnitPlatform()
+    useJUnitPlatform {
+        // 통합테스트 제외
+        excludeTags 'integration'
+    }
+    // 통합테스트 파일 제외
+    exclude '**/*IntegrationTest.class'
 }
+
+// 통합테스트 전용 태스크
+task integrationTest(type: Test) {
+    description = 'Runs integration tests using TestContainers'
+    group = 'verification'
+
+    useJUnitPlatform {
+        includeTags 'integration'
+    }
+
+    // 통합테스트 파일만 포함
+    include '**/*IntegrationTest.class'
+
+    // 통합테스트는 단위 테스트보다 더 많은 메모리와 시간이 필요
+    maxHeapSize = '2048m'
+
+    // 테스트 결과를 별도 디렉토리에 저장
+    reports {
+        html.outputLocation = layout.buildDirectory.dir('reports/integration-tests')
+        junitXml.outputLocation = layout.buildDirectory.dir('test-results/integration-test')
+    }
+
+    // 테스트 진행 상황 출력
+    testLogging {
+        events "passed", "skipped", "failed"
+        exceptionFormat "full"
+        showStandardStreams = false
+    }
+
+    // 통합테스트는 병렬 실행하지 않음 (TestContainers 충돌 방지)
+    maxParallelForks = 1
+
+    // 필요한 경우 특정 프로파일 활성화
+    systemProperty 'spring.profiles.active', 'integration'
+}
+
+// check 태스크가 통합테스트도 실행하도록 설정
+check.dependsOn integrationTest

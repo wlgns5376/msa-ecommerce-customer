@@ -38,7 +38,6 @@ class CustomerProfileIntegrationTest extends AbstractIntegrationTest {
     
     @BeforeEach
     void setUp() throws Exception {
-        waitForContainers();
         // 각 테스트마다 새로운 활성화된 계정 생성
         authenticatedAccount = createAuthenticatedAccount(mockMvc, objectMapper, accountRepository);
     }
