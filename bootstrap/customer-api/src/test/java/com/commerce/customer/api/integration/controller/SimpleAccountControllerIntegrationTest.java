@@ -32,12 +32,7 @@ class SimpleAccountControllerIntegrationTest extends AbstractIntegrationTest {
     
     @Autowired
     private AccountJpaRepository accountRepository;
-    
-    @BeforeEach
-    void setUp() {
-        waitForContainers();
-    }
-    
+
     @Test
     @DisplayName("계정 생성 API - 성공")
     void createAccount_Success() throws Exception {
